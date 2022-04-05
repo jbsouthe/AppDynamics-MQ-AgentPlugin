@@ -23,6 +23,31 @@
           <artifactId>com.ibm.mq.allclient</artifactId>
           <version>9.2.5.0</version>
       </dependency>
+      <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>RELEASE</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>4.13.1</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-api</artifactId>
+          <version>2.17.1</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-core</artifactId>
+          <version>2.17.1</version>
+          <scope>test</scope>
+      </dependency>
+
 
   </dependencies>
   <build>
@@ -51,6 +76,12 @@
                                 <artifactId>agent-api</artifactId>
                                 <type>jar</type>
                                 <includes>com/appdynamics/agent/api/AppdynamicsAgent.class</includes>
+                                <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                            </artifactItem>
+                            <artifactItem>
+                                <groupId>com.ibm.mq</groupId>
+                                <artifactId>com.ibm.mq.allclient</artifactId>
+                                <type>jar</type>
                                 <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             </artifactItem>
                         </artifactItems>

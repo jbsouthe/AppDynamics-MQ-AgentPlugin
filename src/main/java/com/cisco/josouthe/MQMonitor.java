@@ -4,24 +4,67 @@ import com.appdynamics.agent.api.AppdynamicsAgent;
 import com.appdynamics.agent.api.Transaction;
 import com.appdynamics.apm.appagent.api.DataScope;
 import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
+import com.ibm.mq.MQException;
+import com.ibm.mq.MQMessage;
+import com.ibm.mq.MQQueue;
 import com.ibm.mq.MQQueueManager;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class MQMonitor {
     private MQQueueManager queueManagerObject;
+    private String queueManagerName;
     private ISDKLogger logger;
+    private ConcurrentSkipListSet<MQQueueMonitor> queueMonitors;
+    private long creationTime;
 
-    public MQMonitor(Object queueManagerObject, ISDKLogger logger) {
+    public MQMonitor(String queueManagerName, Object queueManagerObject, ISDKLogger logger) {
+        this.creationTime = System.currentTimeMillis();
         this.queueManagerObject = (MQQueueManager) queueManagerObject;
+        this.queueManagerName = queueManagerName;
         this.logger = logger;
+        queueMonitors = new ConcurrentSkipListSet<>();
     }
 
-    public void addQueue() {}
+    public String getQueueManagerName() { return queueManagerName; }
+
+    public String toString() {
+        return String.format("MQMonitor Queue Manager '%s' #of Queues monitoring: %d Age of Queue Manager: %d (ms)", this.queueManagerName, this.queueMonitors.size(), System.currentTimeMillis()-this.creationTime);
+    }
+
+    private boolean ignoreQueueNamed( String qName ) {
+        //TODO get config and allow customers to build a black/white list
+        if( qName.toUpperCase().startsWith("SYSTEM") ) return true;
+        return false;
+    }
+
+    public void addQueueToMonitor(String queueName, int openOptionsArg, MQQueue mqQueue) {
+        if( ignoreQueueNamed( queueName ) ) {
+            logger.info("Ignoring Queue: "+ queueName);
+            return;
+        }
+        logger.info(String.format("Add Queue called for %s open options arg: '%d'", queueName, openOptionsArg));
+        this.queueMonitors.add( new MQQueueMonitor(queueName, openOptionsArg, mqQueue) );
+        try {
+            logger.info(String.format("Test pulling queue depth=%d and max=%d for %s",mqQueue.getCurrentDepth(), mqQueue.getMaximumDepth(), queueName));
+        } catch (MQException e) {
+            logger.info("MQException tring to test queue depth pull: "+e.toString());
+        }
+    }
+
+    public void addQueueToMonitor(String queueName, String topicString, MQMessage mqMessage) {
+        if( ignoreQueueNamed( queueName ) ) {
+            logger.info("Ignoring Queue: "+ queueName);
+            return;
+        }
+        logger.info(String.format("Add Queue called for %s topic: '%s' NOT YET IMPLEMENTED", queueName, topicString));
+    }
 
     public void run() {
         //go get some status stuff and use the AppdynamicsAgent to send some metrics, events, and analytics data
+        logger.info(String.format("Run method called for %s monitor, nothing yet to do, %s", getQueueManagerName(), this.toString()));
     }
 
     public Object getKey() { return queueManagerObject; }
