@@ -4,9 +4,7 @@ import com.appdynamics.instrumentation.sdk.Rule;
 import com.appdynamics.instrumentation.sdk.SDKClassMatchType;
 import com.appdynamics.instrumentation.sdk.SDKStringMatchType;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
-import com.ibm.mq.MQMessage;
-import com.ibm.mq.MQQueue;
-import com.ibm.mq.constants.CMQC;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +53,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
         if( className.equals(MQQUEUEMANAGER) && methodName.equals("<init>") ) { //we want to add this queue manager right after it is created
             if( scheduler == null ) initializeScheduler();
             String queueManagerName = (String) params[0];
-            queueManagerObjectMap.put(objectIntercepted, new MQMonitor(queueManagerName, objectIntercepted, getLogger()) );
+            queueManagerObjectMap.put(objectIntercepted, new MQMonitor(queueManagerName, objectIntercepted, getLogger(), this) );
             queueManagerNameMap.put( queueManagerName, queueManagerObjectMap.get(objectIntercepted));
             return;
         }
@@ -65,22 +63,22 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
             MQMonitor mqMonitor = queueManagerObjectMap.get(objectIntercepted);
             if( mqMonitor != null ) {
                 getLogger().info("Adding queue to monitor: "+ queueName +" openOptions: "+ openOptionsArg);
-                mqMonitor.addQueueToMonitor(queueName, openOptionsArg, (MQQueue) returnVal);
+                mqMonitor.addQueueToMonitorMQQueue(queueName, openOptionsArg, returnVal);
                 getLogger().info("Added queue to monitor: "+ queueName +" openOptions: "+ openOptionsArg);
             }
             return;
         }
         if( className.equals(MQQUEUEMANAGER) && methodName.equals("put") ) {
-            if( params.length == 5 && params[4] instanceof MQMessage ) {
+            if( params.length == 5 && "com.ibm.mq.MQMessage".equals(params[4].getClass().getCanonicalName()) ) {
                 int type = (Integer) params[0];
                 String qName = (String) params[1];
                 String qmName = (String) params[2];
                 String topicString = (String) params[3];
-                if (type == CMQC.MQOT_Q) {
+                if (type == 1 ) { //CMQC.MQOT_Q
                     MQMonitor mqMonitor = queueManagerNameMap.get(qmName);
                     if( mqMonitor != null ) {
                         getLogger().info("Adding queue to monitor: "+ qName +" with topic: "+ topicString);
-                        mqMonitor.addQueueToMonitor(qName, topicString, (MQMessage) params[4]);
+                        mqMonitor.addQueueToMonitorMQMessage(qName, topicString, params[4]);
                         getLogger().info("Added queue to monitor: "+ qName +" with topic: "+ topicString);
                     }
                 }
@@ -89,7 +87,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 String qmName = (String) params[1];
                 MQMonitor mqMonitor = queueManagerNameMap.get(qmName);
                 if( mqMonitor != null ) {
-                    mqMonitor.addQueueToMonitor(qName, null, (MQMessage) params[2] );
+                    mqMonitor.addQueueToMonitorMQMessage(qName, null, params[2] );
                 }
             }
         }

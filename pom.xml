@@ -78,12 +78,14 @@
                                 <includes>com/appdynamics/agent/api/AppdynamicsAgent.class</includes>
                                 <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             </artifactItem>
+                            <!--
                             <artifactItem>
                                 <groupId>com.ibm.mq</groupId>
                                 <artifactId>com.ibm.mq.allclient</artifactId>
                                 <type>jar</type>
                                 <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             </artifactItem>
+                            -->
                         </artifactItems>
                     </configuration>
                 </execution>

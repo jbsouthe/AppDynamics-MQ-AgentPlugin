@@ -4,28 +4,32 @@ import com.appdynamics.agent.api.AppdynamicsAgent;
 import com.appdynamics.agent.api.Transaction;
 import com.appdynamics.apm.appagent.api.DataScope;
 import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
-import com.ibm.mq.MQException;
-import com.ibm.mq.MQMessage;
-import com.ibm.mq.MQQueue;
-import com.ibm.mq.MQQueueManager;
+import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
+import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
+import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public class MQMonitor {
-    private MQQueueManager queueManagerObject;
+    private Object queueManagerObject;
     private String queueManagerName;
     private ISDKLogger logger;
     private ConcurrentSkipListSet<MQQueueMonitor> queueMonitors;
+    private AGenericInterceptor interceptor;
     private long creationTime;
+    IReflector getCurrentDepth, getMaximumDepth;
 
-    public MQMonitor(String queueManagerName, Object queueManagerObject, ISDKLogger logger) {
+    public MQMonitor(String queueManagerName, Object queueManagerObject, ISDKLogger logger, AGenericInterceptor interceptor) {
         this.creationTime = System.currentTimeMillis();
-        this.queueManagerObject = (MQQueueManager) queueManagerObject;
+        this.queueManagerObject = queueManagerObject;
         this.queueManagerName = queueManagerName;
         this.logger = logger;
         queueMonitors = new ConcurrentSkipListSet<>();
+        this.interceptor=interceptor;
+        getCurrentDepth = interceptor.getNewReflectionBuilder().invokeInstanceMethod("getCurrentDepth", true).build();
+        getMaximumDepth = interceptor.getNewReflectionBuilder().invokeInstanceMethod("getMaximumDepth", true).build();
     }
 
     public String getQueueManagerName() { return queueManagerName; }
@@ -40,21 +44,18 @@ public class MQMonitor {
         return false;
     }
 
-    public void addQueueToMonitor(String queueName, int openOptionsArg, MQQueue mqQueue) {
+    public void addQueueToMonitorMQQueue(String queueName, int openOptionsArg, Object mqQueue) {
         if( ignoreQueueNamed( queueName ) ) {
             logger.info("Ignoring Queue: "+ queueName);
             return;
         }
         logger.info(String.format("Add Queue called for %s open options arg: '%d'", queueName, openOptionsArg));
-        this.queueMonitors.add( new MQQueueMonitor(queueName, openOptionsArg, mqQueue) );
-        try {
-            logger.info(String.format("Test pulling queue depth=%d and max=%d for %s",mqQueue.getCurrentDepth(), mqQueue.getMaximumDepth(), queueName));
-        } catch (MQException e) {
-            logger.info("MQException tring to test queue depth pull: "+e.toString());
-        }
+        this.queueMonitors.add( new MQQueueMonitor(queueName, openOptionsArg, mqQueue, logger, interceptor) );
+        logger.info(String.format("Test pulling queue depth=%d and max=%d for %s",getReflectiveLong(mqQueue, getCurrentDepth), getReflectiveLong(mqQueue, getMaximumDepth), queueName));
+
     }
 
-    public void addQueueToMonitor(String queueName, String topicString, MQMessage mqMessage) {
+    public void addQueueToMonitorMQMessage(String queueName, String topicString, Object mqMessage) {
         if( ignoreQueueNamed( queueName ) ) {
             logger.info("Ignoring Queue: "+ queueName);
             return;
@@ -107,5 +108,54 @@ public class MQMonitor {
         logger.debug("Begin reportMetric name: "+ metricName +" = "+ metricValue +" aggregation type: "+ aggregationType + " time rollup type: "+ timeRollupType +" cluster rollup type: "+ clusterRollupType);
         AppdynamicsAgent.getMetricPublisher().reportMetric(metricName, metricValue, aggregationType, timeRollupType, clusterRollupType );
         logger.debug("Finish reportMetric name: "+ metricName +" = "+ metricValue +" aggregation type: "+ aggregationType + " time rollup type: "+ timeRollupType +" cluster rollup type: "+ clusterRollupType);
+    }
+
+    protected String getReflectiveString(Object object, IReflector method, String defaultString) {
+        String value = defaultString;
+        if (object == null || method == null) return defaultString;
+        try {
+            value = (String) method.execute(object.getClass().getClassLoader(), object);
+            if (value == null) return defaultString;
+        } catch (ReflectorException e) {
+            logger.info("Error in reflection call, exception: " + e.getMessage(), e);
+        }
+        return value;
+    }
+
+    protected Integer getReflectiveInteger(Object object, IReflector method, Integer defaultInteger) {
+        Integer value = defaultInteger;
+        if (object == null || method == null) return defaultInteger;
+        try {
+            value = (Integer) method.execute(object.getClass().getClassLoader(), object);
+            if (value == null) return defaultInteger;
+        } catch (ReflectorException e) {
+            logger.info("Error in reflection call, exception: " + e.getMessage(), e);
+        }
+        return value;
+    }
+
+    protected Long getReflectiveLong(Object object, IReflector method) {
+        if (object == null || method == null) return null;
+        Object rawValue = getReflectiveObject(object, method);
+        if (rawValue instanceof Long) return (Long) rawValue;
+        if (rawValue instanceof Integer) return ((Integer) rawValue).longValue();
+        if (rawValue instanceof Double) return ((Double) rawValue).longValue();
+        if (rawValue instanceof Number) return ((Number) rawValue).longValue();
+        return null;
+    }
+
+    protected Object getReflectiveObject(Object object, IReflector method, Object... args) {
+        Object value = null;
+        if (object == null || method == null) return value;
+        try {
+            if (args.length > 0) {
+                value = method.execute(object.getClass().getClassLoader(), object, args);
+            } else {
+                value = method.execute(object.getClass().getClassLoader(), object);
+            }
+        } catch (ReflectorException e) {
+            logger.info("Error in reflection call, method: " + method.getClass().getCanonicalName() + " object: " + object.getClass().getCanonicalName() + " exception: " + e.getMessage(), e);
+        }
+        return value;
     }
 }
