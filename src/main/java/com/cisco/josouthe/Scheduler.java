@@ -1,19 +1,21 @@
 package com.cisco.josouthe;
 
-import java.util.Date;
+import com.cisco.josouthe.monitor.BaseJMSMonitor;
+
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class Scheduler extends Thread {
     private static final String THREAD_NAME = "AppDynamics MQ Monitor Thread";
-    ConcurrentHashMap<Object, MQMonitor> map = null;
+    ConcurrentHashMap<String, BaseJMSMonitor> monitors = null;
     long sleepTime = 30000;
     private static Scheduler instance = null;
 
-    public synchronized static Scheduler getInstance(long sleepTimeMS, ConcurrentHashMap<Object, MQMonitor> concurrentHashMap ) {
+    public synchronized static Scheduler getInstance(long sleepTimeMS, ConcurrentHashMap<String, BaseJMSMonitor> monitors ) {
         if( instance == null )
             instance = new Scheduler();
         if( sleepTimeMS > 30000 ) instance.sleepTime = sleepTimeMS; //safety check, we aren't going faster than this
-        instance.map = concurrentHashMap;
+        instance.monitors = monitors;
         return instance;
     }
 
@@ -42,9 +44,8 @@ public class Scheduler extends Thread {
     public void run() {
         while(true) {
             //run the monitors
-            for( MQMonitor mqMonitor : instance.map.values() ) {
-                if( instance.map.containsKey(mqMonitor.getKey()) ) // make damn sure it hasn't been removed already, be paranoid
-                    mqMonitor.run();
+            for( BaseJMSMonitor monitor : monitors.values() ) {
+                monitor.run();
             }
             try {
                 Thread.sleep(sleepTime);
