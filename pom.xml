@@ -23,6 +23,13 @@
           <artifactId>com.ibm.mq.allclient</artifactId>
           <version>9.2.5.0</version>
       </dependency>
+      <!-- https://mvnrepository.com/artifact/org.json/json -->
+      <dependency>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+          <version>20220320</version>
+      </dependency>
+
       <dependency>
           <groupId>junit</groupId>
           <artifactId>junit</artifactId>
@@ -78,14 +85,19 @@
                                 <includes>com/appdynamics/agent/api/AppdynamicsAgent.class</includes>
                                 <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             </artifactItem>
-                            <!--
+
                             <artifactItem>
                                 <groupId>com.ibm.mq</groupId>
                                 <artifactId>com.ibm.mq.allclient</artifactId>
                                 <type>jar</type>
                                 <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             </artifactItem>
-                            -->
+                            <artifactItem>
+                                <groupId>org.json</groupId>
+                                <artifactId>json</artifactId>
+                                <type>jar</type>
+                                <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                            </artifactItem>
                         </artifactItems>
                     </configuration>
                 </execution>

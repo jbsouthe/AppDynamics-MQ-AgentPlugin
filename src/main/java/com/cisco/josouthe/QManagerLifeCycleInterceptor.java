@@ -21,7 +21,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
     private Scheduler scheduler = null;
     //ConcurrentHashMap<Object, JmsConnectionFactoryWrapper> connectionFactoryObjectMap = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, JmsConnectionFactoryWrapper> connectionFactoryHostMap = new ConcurrentHashMap<>();
-    ConcurrentHashMap<Object, JmsContextWrapper> contextMap = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, JmsContextWrapper> contextMap = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, BaseJMSMonitor> monitors = new ConcurrentHashMap<>();
 
     public QManagerLifeCycleInterceptor() {
@@ -43,10 +43,11 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
          */
 
         if( methodName.equals("close") ) {
-            JmsContextWrapper context = contextMap.remove(objectIntercepted);
+            JmsContextWrapper context = contextMap.remove(objectIntercepted.toString());
             if( context != null ) {
                 JmsConnectionFactoryWrapper jmsConnectionFactoryWrapper = connectionFactoryHostMap.get(context.getConnectionName());
-                jmsConnectionFactoryWrapper.removeContext(context);
+                if( jmsConnectionFactoryWrapper != null )
+                    jmsConnectionFactoryWrapper.removeContext(context);
                 /*if (jmsConnectionFactoryWrapper.getContextSet().isEmpty()) {
                     connectionFactoryObjectMap.remove(jmsConnectionFactoryWrapper.getObject());
                     getLogger().info("Removed connection factory from map");
@@ -74,13 +75,22 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
         getLogger().debug(String.format("onMethodEnd called for %s.%s( %s ) object: %s",className, methodName, printParameters(params), String.valueOf(objectIntercepted)));
 
         if( methodName.equals("createQueue") ) {
-            if( contextMap.containsKey(objectIntercepted) ) {
-                String queueName = (String) params[0];
-                JmsContextWrapper context = contextMap.get(objectIntercepted);
-                context.addQueue(queueName);
-                connectionFactoryHostMap.get(context.getConnectionName()).addQueue(queueName);
-                getLogger().info(String.format("Added Queue '%s' to Parent Context", queueName));
+            JmsContextWrapper context = new JmsContextWrapper(this, objectIntercepted, null);
+            String queueName = (String) params[0];
+            if( contextMap.containsKey(objectIntercepted.toString()) ) {
+                context = contextMap.get(objectIntercepted.toString());
+            } else {
+                contextMap.put(objectIntercepted.toString(), context);
             }
+            context.addQueue(queueName);
+            if( context.getConnectionName() != null && connectionFactoryHostMap.containsKey(context.getConnectionName())) {
+                String key = String.format("%s:%s", context.getJMSProviderName(), context.getConnectionName());
+                monitors.get(key).addQueue(queueName);
+                getLogger().info(String.format("Added Queue '%s' to Monitor for '%s'", queueName, monitors.get(key).toString() ));
+            } else {
+                getLogger().info(String.format("Connection not found for this object: %s", context.getConnectionName()));
+            }
+
         }
 
         if( methodName.equals("createContext") ) {
@@ -95,17 +105,17 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                     ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_APPNAME")
                     ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER")
             ));
-            if( ! contextMap.containsKey(returnVal) ) {
-                contextMap.put(returnVal, new JmsContextWrapper(this, returnVal, objectIntercepted));
+            if( ! contextMap.containsKey(returnVal.toString()) ) {
+                contextMap.put(returnVal.toString(), new JmsContextWrapper(this, returnVal, objectIntercepted));
             }
 
-            JmsContextWrapper context = contextMap.get(returnVal);
+            JmsContextWrapper context = contextMap.get(returnVal.toString());
             getLogger().info(String.format("JMS Provider Name: '%s'",context.getJMSProviderName()));
             switch (context.getJMSProviderName()) {
                 case "IBM MQ JMS Provider": {
                     String key = String.format("%s:%s", context.getJMSProviderName(), connectionFactoryWrapper.getHostPortString());
                     if(! monitors.containsKey(key))
-                        monitors.put( key, new MQMonitor(this, connectionFactoryWrapper) );
+                        monitors.put( key, new MQMonitor(this, connectionFactoryWrapper, key) );
                     break;
                 }
                 default: getLogger().info(String.format("Ignoring this JMS Provider, because it is not currently supported. name: '%s'",context.getJMSProviderName()));

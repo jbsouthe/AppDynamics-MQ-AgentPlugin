@@ -30,6 +30,10 @@ public abstract class BaseWrapper {
         return interceptor.getNewReflectionBuilder().invokeInstanceMethod( method, true).build();
     }
 
+    protected IReflector makeAccessFieldValueReflector(String field ) {
+        return interceptor.getNewReflectionBuilder().accessFieldValue( field, true).build();
+    }
+
     protected String getReflectiveString(Object object, IReflector method, String defaultString) {
         String value = defaultString;
         if( object == null || method == null ) return defaultString;

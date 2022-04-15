@@ -8,6 +8,7 @@ import java.util.Set;
 
 public class JmsContextWrapper extends BaseWrapper{
     private IReflector getMetaData, getJMSProviderName;
+    private IReflector internalJmsConnectionImpl;
     private Object metaDataObject;
     private Set<String> queueNames = new HashSet<>();
     private String connectionName;
@@ -17,6 +18,7 @@ public class JmsContextWrapper extends BaseWrapper{
         super(aGenericInterceptor, objectToWrap, parentObject);
         getMetaData = makeInvokeInstanceMethodReflector("getMetaData");
         getJMSProviderName = makeInvokeInstanceMethodReflector("getJMSProviderName");
+        internalJmsConnectionImpl = makeAccessFieldValueReflector("connection");
         this.metaDataObject = getReflectiveObject(this.object, getMetaData);
     }
 
@@ -31,8 +33,14 @@ public class JmsContextWrapper extends BaseWrapper{
 
     public Set<String> getQueueNames() { return queueNames; }
 
+    public JmsConnectionImplWrapper getConnection() {
+        return new JmsConnectionImplWrapper( this.interceptor, getReflectiveObject(this.object, internalJmsConnectionImpl), this.object);
+    }
     public void setConnectionName( String name ) { this.connectionName=name; }
     public String getConnectionName() {
+        if( this.connectionName == null ) {
+            setConnectionName( getConnection().getHostPortString() );
+        }
         return this.connectionName;
     }
 }

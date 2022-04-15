@@ -45,7 +45,7 @@ public class Scheduler extends Thread {
         while(true) {
             //run the monitors
             for( BaseJMSMonitor monitor : monitors.values() ) {
-                monitor.run();
+                monitor.runIt();
             }
             try {
                 Thread.sleep(sleepTime);

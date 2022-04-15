@@ -6,19 +6,38 @@ import com.appdynamics.apm.appagent.api.DataScope;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public abstract class BaseJMSMonitor implements Comparable{
     protected JmsConnectionFactoryWrapper connectionFactoryWrapper;
     protected AGenericInterceptor interceptor;
+    protected Set<String> queues = new HashSet<>();
+    private String key;
+    private Date creationTime;
+    private long lastRunTimestamp;
 
-    public BaseJMSMonitor( AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper connectionFactoryWrapper) {
+    public BaseJMSMonitor( AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper connectionFactoryWrapper, String key) {
         this.connectionFactoryWrapper=connectionFactoryWrapper;
         this.interceptor=aGenericInterceptor;
+        this.key=key;
+        this.creationTime= new Date();
     }
 
     public abstract void run();
+
+    public void runIt() {
+        this.lastRunTimestamp = System.currentTimeMillis();
+        run();
+    }
+
+    public String toString() {
+        return String.format("%s %d queues: %s last run %d ms ago", this.key, this.queues.size(), this.queues, System.currentTimeMillis()-this.lastRunTimestamp );
+    }
+
+    public synchronized void addQueue( String name ) { queues.add(name); }
 
     protected void collectSnapshotData(String name, String value) {
         collectSnapshotData(AppdynamicsAgent.getTransaction(), name, value);
