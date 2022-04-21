@@ -4,15 +4,17 @@ import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException;
 
+import java.lang.reflect.Constructor;
 import java.util.Hashtable;
 
 public class MQQueueManagerWrapper extends BaseWrapper{
 
-    private IReflector accessQueue;
+    private IReflector accessQueue, accessQueueWithOptions;
 
     public MQQueueManagerWrapper(AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper jmsConnectionFactoryWrapper) {
         super(aGenericInterceptor, null, null);
 
+        /*
         IReflector constructor = interceptor.getNewReflectionBuilder()
                 .loadClass("com.ibm.mq.MQQueueManager")
                 .createObject("com.ibm.mq.MQQueueManager", String.class.getCanonicalName(), Hashtable.class.getCanonicalName())
@@ -35,11 +37,30 @@ public class MQQueueManagerWrapper extends BaseWrapper{
             interceptor.getLogger().info("Runtime Exception Creating MQQueueManager, exception: "+ runtimeException.toString(), runtimeException);
         }
 
-        accessQueue= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName(), Integer.class.getCanonicalName());
+         */
+
+        try{
+            Class<?> clazz = jmsConnectionFactoryWrapper.getObject().getClass().getClassLoader().loadClass("com.ibm.mq.MQQueueManager");
+            Constructor constructor = clazz.getConstructor( String.class, Hashtable.class);
+            Hashtable env = jmsConnectionFactoryWrapper.getPropertyHashTable("XMSC_WMQ_HOST_NAME", "XMSC_WMQ_PORT", "XMSC_WMQ_CHANNEL", "XMSC_USERID", "XMSC_PASSWORD");
+            this.object = constructor.newInstance(jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), env);
+            logger.info("Initialized IBM MQ Queue Manager for monitoring, with reflection");
+        } catch (Exception exception) {
+            logger.info(String.format("Error initializing reflective queue manager for %s Exception: %s",jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), exception.toString()),exception);
+        }
+
+        accessQueue= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName());
+        accessQueueWithOptions= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName(), Integer.class.getCanonicalName());
+
     }
 
     public MQQueueWrapper accessQueue( String name ) {
-        Object mqQueueObject = getReflectiveObject(this.object, accessQueue, name, 32);
-        return new MQQueueWrapper(this.interceptor, mqQueueObject, this.object);
+        Object mqQueueObject = getReflectiveObject(this.object, accessQueue, name);
+        return new MQQueueWrapper(this.interceptor, mqQueueObject, this.object, name, null);
+    }
+
+    public MQQueueWrapper accessQueue(String name, int options) {
+        Object mqQueueObject = getReflectiveObject(this.object, accessQueueWithOptions, name, options);
+        return new MQQueueWrapper(this.interceptor, mqQueueObject, this.object, name, options);
     }
 }

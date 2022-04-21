@@ -23,6 +23,11 @@
           <artifactId>com.ibm.mq.allclient</artifactId>
           <version>9.2.5.0</version>
       </dependency>
+      <dependency>
+          <groupId>javax.jms</groupId>
+          <artifactId>javax.jms-api</artifactId>
+          <version>2.0.1</version>
+      </dependency>
       <!-- https://mvnrepository.com/artifact/org.json/json -->
       <dependency>
           <groupId>org.json</groupId>
@@ -85,11 +90,12 @@
                                 <includes>com/appdynamics/agent/api/AppdynamicsAgent.class</includes>
                                 <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             </artifactItem>
-
+                            <!--
                             <artifactItem>
                                 <groupId>com.ibm.mq</groupId>
                                 <artifactId>com.ibm.mq.allclient</artifactId>
                                 <type>jar</type>
+                                <includes>**/*</includes>
                                 <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             </artifactItem>
                             <artifactItem>
@@ -98,20 +104,82 @@
                                 <type>jar</type>
                                 <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             </artifactItem>
+                            -->
                         </artifactItems>
                     </configuration>
                 </execution>
             </executions>
         </plugin>
+        <!--
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.2.4</version>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                    <configuration>
+                        < ! - - <minimizeJar>true</minimizeJar> - - >
+                        <filters>
+                            <filter>
+                                <artifact>com.ibm.mq:com.ibm.mq.allclient</artifact>
+                                <includes>
+                                    <include>**</include>
+                                </includes>
+                            </filter>
+                            <filter>
+                                <artifact>javax.jms:javax.jms-api</artifact>
+                                <includes>
+                                    <include>**</include>
+                                </includes>
+                            </filter>
+                            <filter>
+                                <artifact>org.json:json</artifact>
+                                <includes>
+                                    <include>**</include>
+                                </includes>
+                            </filter>
+                            <filter>
+                                <artifact>*:*</artifact>
+                                <excludes>
+                                    <exclude>META-INF/*.SF</exclude>
+                                    <exclude>META-INF/*.DSA</exclude>
+                                    <exclude>META-INF/*.RSA</exclude>
+                                </excludes>
+                            </filter>
+                        </filters>
+                        <artifactSet>
+                            <excludes>
+                                <exclude>com.appdynamics.agent:agent-api</exclude>
+                                <exclude>instrumentation-sdk:instrumentation-sdk</exclude>
+                                <exclude>junit:*</exclude>
+                                <exclude>org.apache.logging.log4j:*</exclude>
+                            </excludes>
+                        </artifactSet>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+        -->
 		<plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.2.0</version>
         <configuration>
           <includes>
+            <include>**/*.properties</include>
             <include>**/*.class</include>
-			<include>../com/appdynamics/agent/api/AppdynamicsAgent.class</include>
           </includes>
+            <!-- Plugin-Classes: <comma separated list of fully qualified class names> -->
+            <archive>
+                <addMavenDescriptor>false</addMavenDescriptor>
+                <manifestEntries>
+                    <Plugin-Classes>com.cisco.josouthe.QManagerLifeCycleInterceptor</Plugin-Classes>
+                </manifestEntries>
+            </archive>
 		  <outputDirectory>${basedir}</outputDirectory>
         </configuration>
       </plugin>

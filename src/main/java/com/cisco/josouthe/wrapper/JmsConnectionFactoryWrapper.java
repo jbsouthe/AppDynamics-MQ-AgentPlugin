@@ -68,8 +68,18 @@ public class JmsConnectionFactoryWrapper extends BaseWrapper{
         while( enumeration.hasMoreElements() ) {
             String propertyName = enumeration.nextElement();
             Object value = getObjectProperty(propertyName);
-            if( value != null )
-                hashtable.put(propertyName, value );
+            if( value != null ) {
+                hashtable.put(propertyName, value);
+            }
+            this.interceptor.getLogger().info(String.format("Property: %s=%s",propertyName,value));
+        }
+        return hashtable;
+    }
+
+    public Hashtable getPropertyHashTable(String... propertyNames) {
+        Hashtable hashtable = new Hashtable();
+        for( String propertyName : propertyNames ) {
+            hashtable.put(propertyName, getObjectProperty(propertyName));
         }
         return hashtable;
     }

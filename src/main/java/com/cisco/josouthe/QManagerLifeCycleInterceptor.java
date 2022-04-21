@@ -115,7 +115,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 case "IBM MQ JMS Provider": {
                     String key = String.format("%s:%s", context.getJMSProviderName(), connectionFactoryWrapper.getHostPortString());
                     if(! monitors.containsKey(key))
-                        monitors.put( key, new MQMonitor(this, connectionFactoryWrapper, key) );
+                        monitors.put( key, new MQMonitor(this, connectionFactoryWrapper, key, "IBM MQ JMS") );
                     break;
                 }
                 default: getLogger().info(String.format("Ignoring this JMS Provider, because it is not currently supported. name: '%s'",context.getJMSProviderName()));

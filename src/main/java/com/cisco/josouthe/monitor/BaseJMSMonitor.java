@@ -3,6 +3,7 @@ package com.cisco.josouthe.monitor;
 import com.appdynamics.agent.api.AppdynamicsAgent;
 import com.appdynamics.agent.api.Transaction;
 import com.appdynamics.apm.appagent.api.DataScope;
+import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 
@@ -14,16 +15,19 @@ import java.util.Set;
 public abstract class BaseJMSMonitor implements Comparable{
     protected JmsConnectionFactoryWrapper connectionFactoryWrapper;
     protected AGenericInterceptor interceptor;
+    protected ISDKLogger logger;
     protected Set<String> queues = new HashSet<>();
     private String key;
     private Date creationTime;
     private long lastRunTimestamp;
+    private String metricPrefix = "Custom Metrics|";
 
     public BaseJMSMonitor( AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper connectionFactoryWrapper, String key) {
         this.connectionFactoryWrapper=connectionFactoryWrapper;
         this.interceptor=aGenericInterceptor;
         this.key=key;
         this.creationTime= new Date();
+        this.logger = interceptor.getLogger();
     }
 
     public abstract void run();
@@ -39,13 +43,13 @@ public abstract class BaseJMSMonitor implements Comparable{
 
     public synchronized void addQueue( String name ) { queues.add(name); }
 
-    protected void collectSnapshotData(String name, String value) {
+    protected void collectSnapshotData(String name, Object value) {
         collectSnapshotData(AppdynamicsAgent.getTransaction(), name, value);
     }
 
-    protected void collectSnapshotData(Transaction transaction, String name, String value) {
+    protected void collectSnapshotData(Transaction transaction, String name, Object value) {
         if (transaction == null) return;
-        transaction.collectData(name, value, new HashSet<DataScope>() {{
+        transaction.collectData(name, String.valueOf(value), new HashSet<DataScope>() {{
             add(DataScope.SNAPSHOTS);
         }});
     }
@@ -76,9 +80,9 @@ public abstract class BaseJMSMonitor implements Comparable{
                 "clusterRollupType": "Values allowed: [INDIVIDUAL, COLLECTIVE]" }
          */
     protected void reportMetric(String metricName, long metricValue, String aggregationType, String timeRollupType, String clusterRollupType) {
-        interceptor.getLogger().debug("Begin reportMetric name: " + metricName + " = " + metricValue + " aggregation type: " + aggregationType + " time rollup type: " + timeRollupType + " cluster rollup type: " + clusterRollupType);
-        AppdynamicsAgent.getMetricPublisher().reportMetric(metricName, metricValue, aggregationType, timeRollupType, clusterRollupType);
-        interceptor.getLogger().debug("Finish reportMetric name: " + metricName + " = " + metricValue + " aggregation type: " + aggregationType + " time rollup type: " + timeRollupType + " cluster rollup type: " + clusterRollupType);
+        interceptor.getLogger().debug("Begin reportMetric name: " + metricPrefix + metricName + " = " + metricValue + " aggregation type: " + aggregationType + " time rollup type: " + timeRollupType + " cluster rollup type: " + clusterRollupType);
+        AppdynamicsAgent.getMetricPublisher().reportMetric(metricPrefix + metricName, metricValue, aggregationType, timeRollupType, clusterRollupType);
+        interceptor.getLogger().debug("Finish reportMetric name: " + metricPrefix + metricName + " = " + metricValue + " aggregation type: " + aggregationType + " time rollup type: " + timeRollupType + " cluster rollup type: " + clusterRollupType);
     }
 
     @Override
