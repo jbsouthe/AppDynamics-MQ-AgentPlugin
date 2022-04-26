@@ -5,6 +5,7 @@ import com.appdynamics.agent.api.Transaction;
 import com.appdynamics.apm.appagent.api.DataScope;
 import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
+import com.cisco.josouthe.metric.Metric;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 
 import java.util.Date;
@@ -83,6 +84,10 @@ public abstract class BaseJMSMonitor implements Comparable{
         interceptor.getLogger().debug("Begin reportMetric name: " + metricPrefix + metricName + " = " + metricValue + " aggregation type: " + aggregationType + " time rollup type: " + timeRollupType + " cluster rollup type: " + clusterRollupType);
         AppdynamicsAgent.getMetricPublisher().reportMetric(metricPrefix + metricName, metricValue, aggregationType, timeRollupType, clusterRollupType);
         interceptor.getLogger().debug("Finish reportMetric name: " + metricPrefix + metricName + " = " + metricValue + " aggregation type: " + aggregationType + " time rollup type: " + timeRollupType + " cluster rollup type: " + clusterRollupType);
+    }
+
+    protected void reportMetric(Metric metric, long metricValue) {
+        reportMetric( metric.getName(), metricValue, metric.getAggregationType(), metric.getTimeRollUpType(), metric.getClusterRollUpType() );
     }
 
     @Override
