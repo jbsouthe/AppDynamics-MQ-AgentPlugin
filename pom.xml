@@ -122,7 +122,6 @@
                         <goal>shade</goal>
                     </goals>
                     <configuration>
-                        < ! - - <minimizeJar>true</minimizeJar> - - >
                         <filters>
                             <filter>
                                 <artifact>com.ibm.mq:com.ibm.mq.allclient</artifact>
