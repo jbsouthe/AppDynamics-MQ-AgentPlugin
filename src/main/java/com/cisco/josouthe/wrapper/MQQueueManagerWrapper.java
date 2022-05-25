@@ -6,34 +6,23 @@ import java.util.Hashtable;
 
 public class MQQueueManagerWrapper extends BaseWrapper{
 
+    private String hostname, userID, password, queue, channel;
+    private Integer port;
     private IReflector accessQueue, accessQueueWithOptions;
 
-    public MQQueueManagerWrapper(AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper jmsConnectionFactoryWrapper) {
+    public MQQueueManagerWrapper(AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper jmsConnectionFactoryWrapper, String userIDOverride, String passwordOverride) {
         super(aGenericInterceptor, null, null);
-
-
-        try{
-            Hashtable connectionProperties = new Hashtable<String,Object>(); //jmsConnectionFactoryWrapper.getPropertyHashTable("XMSC_WMQ_HOST_NAME", "XMSC_WMQ_PORT", "XMSC_WMQ_CHANNEL", "XMSC_USERID", "XMSC_PASSWORD");
-            connectionProperties.put("transport", "MQSeries Client");
-            connectionProperties.put("hostname", jmsConnectionFactoryWrapper.getObjectProperty("XMSC_WMQ_HOST_NAME"));
-            connectionProperties.put("port", jmsConnectionFactoryWrapper.getIntProperty("XMSC_WMQ_PORT"));
-            connectionProperties.put("channel", jmsConnectionFactoryWrapper.getObjectProperty("XMSC_WMQ_CHANNEL"));
-            connectionProperties.put("userID", jmsConnectionFactoryWrapper.getObjectProperty("XMSC_USERID"));
-            connectionProperties.put("password", jmsConnectionFactoryWrapper.getObjectProperty("XMSC_PASSWORD"));
-            logger.info(String.format("jms queue '%s' connection properties: %s", jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), connectionProperties));
-            IReflector constructor = interceptor.getNewReflectionBuilder()
-                    .createObject("com.ibm.mq.MQQueueManager", String.class.getCanonicalName(), Hashtable.class.getCanonicalName() )
-                    .build();
-            this.object = constructor.execute( jmsConnectionFactoryWrapper.getObject().getClass().getClassLoader(), null,
-                    new Object[] { jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), connectionProperties });
-            logger.info("Initialized IBM MQ Queue Manager for monitoring, with reflection");
-        } catch (Exception exception) {
-            logger.info(String.format("Error initializing reflective queue manager for %s Exception: %s",jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), exception.toString()),exception);
-        }
-
+        hostname = jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_HOST_NAME");
+        port = jmsConnectionFactoryWrapper.getIntProperty("XMSC_WMQ_PORT");
+        queue = jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER");
+        channel = jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_CHANNEL");
+        userID = jmsConnectionFactoryWrapper.getStringProperty("XMSC_USERID");
+        if( userIDOverride != null ) userID=userIDOverride;
+        password = jmsConnectionFactoryWrapper.getStringProperty("XMSC_PASSWORD");
+        if( passwordOverride != null ) password=passwordOverride;
+        init(jmsConnectionFactoryWrapper.getObject().getClass().getClassLoader());
         accessQueue= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName());
         accessQueueWithOptions= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName(), Integer.class.getCanonicalName());
-
     }
 
     public MQQueueWrapper accessQueue( String name ) {
@@ -45,4 +34,33 @@ public class MQQueueManagerWrapper extends BaseWrapper{
         Object mqQueueObject = getReflectiveObject(this.object, accessQueueWithOptions, name, options);
         return new MQQueueWrapper(this.interceptor, mqQueueObject, this.object, name, options);
     }
+
+    public void init( ClassLoader classLoader ) {
+        try{
+            Hashtable connectionProperties = new Hashtable<String,Object>(); //jmsConnectionFactoryWrapper.getPropertyHashTable("XMSC_WMQ_HOST_NAME", "XMSC_WMQ_PORT", "XMSC_WMQ_CHANNEL", "XMSC_USERID", "XMSC_PASSWORD");
+            connectionProperties.put("transport", "MQSeries Client");
+            connectionProperties.put("hostname", hostname);
+            connectionProperties.put("port", port);
+            connectionProperties.put("channel", channel);
+            connectionProperties.put("userID", userID);
+            connectionProperties.put("password", password);
+            logger.info(String.format("jms queue '%s' connection properties: %s", queue, connectionProperties));
+            IReflector constructor = interceptor.getNewReflectionBuilder()
+                    .createObject("com.ibm.mq.MQQueueManager", String.class.getCanonicalName(), Hashtable.class.getCanonicalName() )
+                    .build();
+            this.object = constructor.execute( classLoader, null,
+                    new Object[] { queue, connectionProperties });
+            logger.info("Initialized IBM MQ Queue Manager for monitoring, with reflection");
+        } catch (Exception exception) {
+            logger.info(String.format("Error initializing reflective queue manager for %s Exception: %s",queue, exception.toString()),exception);
+        }
+    }
+
+    public String getHostname() { return hostname; }
+    public void setHostname( String s ) { hostname=s; }
+    public String getUserID() { return userID; }
+    public void setUserID( String s ) { userID=s; }
+    public void setPassword( String s ) { password=s; }
+    public Integer getPort() { return port; }
+    public void setPort( Integer i ) { port=i; }
 }

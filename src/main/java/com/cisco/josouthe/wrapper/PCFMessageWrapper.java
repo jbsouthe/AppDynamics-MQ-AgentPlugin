@@ -8,14 +8,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PCFMessageWrapper extends BaseWrapper{
-    private IReflector addParameter, getIntParameterValue;
+    private IReflector addParameter, getIntParameterValue, constructor;
 
     public PCFMessageWrapper(AGenericInterceptor aGenericInterceptor, Object parentObject, Integer creationOptions) {
         super(aGenericInterceptor, null, parentObject);
         try{
+            /*
             Class<?> pcfMessageClass = parentObject.getClass().getClassLoader().loadClass("com.ibm.mq.headers.pcf.PCFMessage");
             Constructor constructor = pcfMessageClass.getConstructor( int.class );
             this.object = constructor.newInstance(creationOptions);
+             */
+            constructor = interceptor.getNewReflectionBuilder().createObject("com.ibm.mq.headers.pcf.PCFMessage", new String[] { int.class.getCanonicalName() }).build();
+            this.object = constructor.execute( parentObject.getClass().getClassLoader(), parentObject, new Object[] { creationOptions } );
             logger.info("Initialized IBM MQ PCFMessage for monitoring, with reflection");
         } catch (Exception exception) {
             logger.info(String.format("Error initializing reflective PCFMessage Exception: %s", exception.toString()),exception);

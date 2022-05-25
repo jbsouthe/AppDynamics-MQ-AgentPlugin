@@ -4,29 +4,56 @@ import com.appdynamics.instrumentation.sdk.Rule;
 import com.appdynamics.instrumentation.sdk.SDKClassMatchType;
 import com.appdynamics.instrumentation.sdk.SDKStringMatchType;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
+import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 import com.cisco.josouthe.monitor.BaseJMSMonitor;
 import com.cisco.josouthe.monitor.MQMonitor;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 import com.cisco.josouthe.wrapper.JmsContextWrapper;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
     private static String MQQUEUEMANAGER = "com.ibm.mq.MQQueueManager";
     private static String ACTIVEMQCONNECTIONFACTORY = "org.apache.activemq.ActiveMQConnectionFactory";
+    private static String AUTHENTICATION_CONFIG_FILE = "IBMMQAgentPlugin-authentications.json";
     private Scheduler scheduler = null;
     //ConcurrentHashMap<Object, JmsConnectionFactoryWrapper> connectionFactoryObjectMap = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, JmsConnectionFactoryWrapper> connectionFactoryHostMap = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, JmsContextWrapper> contextMap = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, BaseJMSMonitor> monitors = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, AuthenticationOverrideInfo> authentications = new ConcurrentHashMap<>();
 
     public QManagerLifeCycleInterceptor() {
         super();
+        initializeAuthenticationConfig( new File( this.getAgentPluginDirectory(), AUTHENTICATION_CONFIG_FILE), authentications );
         getLogger().info("Initialized MQ Monitor on Agent");
+    }
+
+    private void initializeAuthenticationConfig(File configFile, ConcurrentHashMap<String, AuthenticationOverrideInfo> authenticationsHashMap) {
+        if( configFile == null || !configFile.exists() ) {
+            getLogger().info(String.format("Authentication Config file does not exist, to override MQ users to monitor with, please create the file: %s", String.valueOf(configFile) ) );
+        }
+        try {
+            InputStream inputStream = new FileInputStream(configFile);
+            JSONTokener tokener = new JSONTokener(inputStream);
+            JSONArray array = new JSONArray(tokener);
+            for( int i=0; i< array.length(); i++ ){
+                AuthenticationOverrideInfo authenticationOverrideInfo = new AuthenticationOverrideInfo(array.getJSONObject(i));
+                authenticationsHashMap.put( authenticationOverrideInfo.getKey(), authenticationOverrideInfo);
+            }
+        } catch (FileNotFoundException e) {
+            getLogger().error(String.format("Error reading %s, exception: %s", configFile.getAbsolutePath(), e.toString()));
+        }
     }
 
     @Override
@@ -115,7 +142,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 case "IBM MQ JMS Provider": {
                     String key = String.format("%s:%s", context.getJMSProviderName(), connectionFactoryWrapper.getHostPortString());
                     if(! monitors.containsKey(key))
-                        monitors.put( key, new MQMonitor(this, connectionFactoryWrapper, key, "IBM MQ JMS") );
+                        monitors.put( key, new MQMonitor(this, connectionFactoryWrapper, key, "IBM MQ JMS", authentications.get(key)) );
                     break;
                 }
                 default: getLogger().info(String.format("Ignoring this JMS Provider, because it is not currently supported. name: '%s'",context.getJMSProviderName()));

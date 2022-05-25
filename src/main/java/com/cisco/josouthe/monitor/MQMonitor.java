@@ -1,8 +1,8 @@
 package com.cisco.josouthe.monitor;
 
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
-import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
-import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException;
+import com.cisco.josouthe.exception.UserNotAuthorizedException;
+import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 import com.cisco.josouthe.metric.IBMMQMetric;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 import com.cisco.josouthe.wrapper.MQQueueManagerWrapper;
@@ -10,9 +10,6 @@ import com.cisco.josouthe.wrapper.MQQueueWrapper;
 
 import com.cisco.josouthe.wrapper.PCFMessageAgentWrapper;
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class MQMonitor extends BaseJMSMonitor {
@@ -23,11 +20,21 @@ public class MQMonitor extends BaseJMSMonitor {
     private List<IBMMQMetric> metrics;
     private Map<String, Integer> ibmConstantAccessorsMap;
 
-    public MQMonitor( AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper connectionFactoryWrapper, String key, String providerName) {
+    public MQMonitor(AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper connectionFactoryWrapper, String key, String providerName, AuthenticationOverrideInfo authenticationOverrideInfo) {
         super(aGenericInterceptor, connectionFactoryWrapper, key);
         this.providerName=providerName;
-        mqQueueManager = new MQQueueManagerWrapper(aGenericInterceptor, connectionFactoryWrapper);
-        agent = new PCFMessageAgentWrapper(aGenericInterceptor, mqQueueManager.getObject() );
+        String userIDOverride = null;
+        String passwordOverride = null;
+        if( authenticationOverrideInfo != null ) {
+            userIDOverride = authenticationOverrideInfo.userID;
+            passwordOverride = authenticationOverrideInfo.password;
+        }
+        mqQueueManager = new MQQueueManagerWrapper(aGenericInterceptor, connectionFactoryWrapper, userIDOverride, passwordOverride);
+        try {
+            agent = new PCFMessageAgentWrapper(aGenericInterceptor, mqQueueManager );
+        } catch (UserNotAuthorizedException e) {
+            logger.info(String.format("Error creating PCFMEssageAgent, the user is not authorized: %s exception: %s", e.userID, e.getMessage()));
+        }
         /*
         try {
             this.mqQueueManager = new MQQueueManager(connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), connectionFactoryWrapper.getPropertyHashTable());

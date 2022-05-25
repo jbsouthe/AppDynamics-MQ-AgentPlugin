@@ -90,6 +90,13 @@
                                 <includes>com/appdynamics/agent/api/AppdynamicsAgent.class</includes>
                                 <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             </artifactItem>
+                            <artifactItem>
+                                <groupId>org.json</groupId>
+                                <artifactId>json</artifactId>
+                                <type>jar</type>
+                                <includes>*/*.class</includes>
+                                <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                            </artifactItem>
                             <!--
                             <artifactItem>
                                 <groupId>com.ibm.mq</groupId>
@@ -110,7 +117,7 @@
                 </execution>
             </executions>
         </plugin>
-        <!--
+<!--
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-shade-plugin</artifactId>
@@ -136,18 +143,18 @@
                                 </includes>
                             </filter>
                             <filter>
-                                <artifact>org.json:json</artifact>
-                                <includes>
-                                    <include>**</include>
-                                </includes>
-                            </filter>
-                            <filter>
                                 <artifact>*:*</artifact>
                                 <excludes>
                                     <exclude>META-INF/*.SF</exclude>
                                     <exclude>META-INF/*.DSA</exclude>
                                     <exclude>META-INF/*.RSA</exclude>
                                 </excludes>
+                            </filter>
+                            <filter>
+                                <artifact>org.json:json</artifact>
+                                <includes>
+                                    <include>**</include>
+                                </includes>
                             </filter>
                         </filters>
                         <artifactSet>
@@ -156,13 +163,15 @@
                                 <exclude>instrumentation-sdk:instrumentation-sdk</exclude>
                                 <exclude>junit:*</exclude>
                                 <exclude>org.apache.logging.log4j:*</exclude>
+                                <exclude>javax.jms:*</exclude>
+                                <exclude>com.ibm.mq:*</exclude>
                             </excludes>
                         </artifactSet>
                     </configuration>
                 </execution>
             </executions>
         </plugin>
-        -->
+-->
 		<plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
