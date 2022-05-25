@@ -94,7 +94,7 @@
                                 <groupId>org.json</groupId>
                                 <artifactId>json</artifactId>
                                 <type>jar</type>
-                                <includes>*/*.class</includes>
+                                <includes>**/*.class</includes>
                                 <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             </artifactItem>
                             <!--
