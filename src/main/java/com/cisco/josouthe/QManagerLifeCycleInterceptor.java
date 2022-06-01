@@ -32,6 +32,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
     ConcurrentHashMap<String, JmsContextWrapper> contextMap = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, BaseJMSMonitor> monitors = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, AuthenticationOverrideInfo> authentications = new ConcurrentHashMap<>();
+    private AuthenticationOverrideInfo defaultAuthenticationOverrideInfo;
 
     public QManagerLifeCycleInterceptor() {
         super();
@@ -49,7 +50,16 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
             JSONArray array = new JSONArray(tokener);
             for( int i=0; i< array.length(); i++ ){
                 AuthenticationOverrideInfo authenticationOverrideInfo = new AuthenticationOverrideInfo(array.getJSONObject(i));
-                authenticationsHashMap.put( authenticationOverrideInfo.getKey(), authenticationOverrideInfo);
+                getLogger().info(String.format("Initializing Authentication Override: %s", authenticationOverrideInfo));
+                if( authenticationOverrideInfo.isDefault() ) {
+                    if( defaultAuthenticationOverrideInfo == null ) {
+                        defaultAuthenticationOverrideInfo = authenticationOverrideInfo;
+                    } else {
+                        getLogger().warn(String.format("Default authentication override config already set, looks to be set more than once, please update the config file '%s' to only have one default, we are ignoring the others", configFile.getAbsolutePath()));
+                    }
+                } else {
+                    authenticationsHashMap.put(authenticationOverrideInfo.getKey(), authenticationOverrideInfo);
+                }
             }
         } catch (FileNotFoundException e) {
             getLogger().error(String.format("Error reading %s, exception: %s", configFile.getAbsolutePath(), e.toString()));
@@ -141,8 +151,12 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
             switch (context.getJMSProviderName()) {
                 case "IBM MQ JMS Provider": {
                     String key = String.format("%s:%s", context.getJMSProviderName(), connectionFactoryWrapper.getHostPortString());
-                    if(! monitors.containsKey(key))
-                        monitors.put( key, new MQMonitor(this, connectionFactoryWrapper, key, "IBM MQ JMS", authentications.get(key)) );
+                    if(! monitors.containsKey(key)) {
+                        AuthenticationOverrideInfo authenticationOverrideInfo = authentications.get(key);
+                        if( authenticationOverrideInfo == null && defaultAuthenticationOverrideInfo != null )
+                            authenticationOverrideInfo = defaultAuthenticationOverrideInfo;
+                        monitors.put(key, new MQMonitor(this, connectionFactoryWrapper, key, "IBM MQ JMS", authenticationOverrideInfo ));
+                    }
                     break;
                 }
                 default: getLogger().info(String.format("Ignoring this JMS Provider, because it is not currently supported. name: '%s'",context.getJMSProviderName()));

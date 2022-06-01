@@ -72,7 +72,7 @@ Caused by: com.ibm.mq.headers.MQExceptionWrapper: MQJE001: Completion Code '2', 
              */
             if( exception.getCause() instanceof java.lang.reflect.InvocationTargetException && "com.ibm.mq.headers.MQExceptionWrapper".equals(exception.getCause().getCause().getClass().getCanonicalName())) {
                 if( "MQJE001: Completion Code '2', Reason '2035'.".equals( exception.getCause().getCause().getMessage() ) ) {
-                    throw new UserNotAuthorizedException( mqQueueManager.getHostname(), mqQueueManager.getPort(), mqQueueManager.getUserID(), exception.getCause().getCause().getMessage());
+                    throw new UserNotAuthorizedException( mqQueueManager.getHostname(), mqQueueManager.getPort(), mqQueueManager.getUserID(), mqQueueManager.getChannel(), exception.getCause().getCause().getMessage());
                 }
                 //logger.info(String.format("Exception cause class: '%s' message: '%s'",mqException.getClass().getCanonicalName(), mqException.getMessage()));
             }

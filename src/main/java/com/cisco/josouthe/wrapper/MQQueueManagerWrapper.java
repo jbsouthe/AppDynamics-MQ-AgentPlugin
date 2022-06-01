@@ -2,6 +2,8 @@ package com.cisco.josouthe.wrapper;
 
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
+import com.cisco.josouthe.json.AuthenticationOverrideInfo;
+
 import java.util.Hashtable;
 
 public class MQQueueManagerWrapper extends BaseWrapper{
@@ -10,16 +12,17 @@ public class MQQueueManagerWrapper extends BaseWrapper{
     private Integer port;
     private IReflector accessQueue, accessQueueWithOptions;
 
-    public MQQueueManagerWrapper(AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper jmsConnectionFactoryWrapper, String userIDOverride, String passwordOverride) {
+    public MQQueueManagerWrapper(AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper jmsConnectionFactoryWrapper, AuthenticationOverrideInfo authenticationOverrideInfo) {
         super(aGenericInterceptor, null, null);
         hostname = jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_HOST_NAME");
         port = jmsConnectionFactoryWrapper.getIntProperty("XMSC_WMQ_PORT");
         queue = jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER");
         channel = jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_CHANNEL");
+        if( authenticationOverrideInfo != null && authenticationOverrideInfo.channel != null ) channel=authenticationOverrideInfo.channel;
         userID = jmsConnectionFactoryWrapper.getStringProperty("XMSC_USERID");
-        if( userIDOverride != null ) userID=userIDOverride;
+        if( authenticationOverrideInfo != null && authenticationOverrideInfo.userID != null ) userID=authenticationOverrideInfo.userID;
         password = jmsConnectionFactoryWrapper.getStringProperty("XMSC_PASSWORD");
-        if( passwordOverride != null ) password=passwordOverride;
+        if( authenticationOverrideInfo != null && authenticationOverrideInfo.password != null ) password=authenticationOverrideInfo.password;
         init(jmsConnectionFactoryWrapper.getObject().getClass().getClassLoader());
         accessQueue= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName());
         accessQueueWithOptions= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName(), Integer.class.getCanonicalName());
@@ -63,4 +66,6 @@ public class MQQueueManagerWrapper extends BaseWrapper{
     public void setPassword( String s ) { password=s; }
     public Integer getPort() { return port; }
     public void setPort( Integer i ) { port=i; }
+    public String getChannel() { return channel; }
+    public void setChannel( String s ) { channel=s; }
 }

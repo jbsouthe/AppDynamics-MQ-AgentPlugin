@@ -23,17 +23,11 @@ public class MQMonitor extends BaseJMSMonitor {
     public MQMonitor(AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper connectionFactoryWrapper, String key, String providerName, AuthenticationOverrideInfo authenticationOverrideInfo) {
         super(aGenericInterceptor, connectionFactoryWrapper, key);
         this.providerName=providerName;
-        String userIDOverride = null;
-        String passwordOverride = null;
-        if( authenticationOverrideInfo != null ) {
-            userIDOverride = authenticationOverrideInfo.userID;
-            passwordOverride = authenticationOverrideInfo.password;
-        }
-        mqQueueManager = new MQQueueManagerWrapper(aGenericInterceptor, connectionFactoryWrapper, userIDOverride, passwordOverride);
+        mqQueueManager = new MQQueueManagerWrapper(aGenericInterceptor, connectionFactoryWrapper, authenticationOverrideInfo);
         try {
             agent = new PCFMessageAgentWrapper(aGenericInterceptor, mqQueueManager );
         } catch (UserNotAuthorizedException e) {
-            logger.info(String.format("Error creating PCFMEssageAgent, the user is not authorized: %s exception: %s", e.userID, e.getMessage()));
+            logger.info(String.format("Error creating PCFMessageAgent, %s", e.toString()));
         }
         /*
         try {
