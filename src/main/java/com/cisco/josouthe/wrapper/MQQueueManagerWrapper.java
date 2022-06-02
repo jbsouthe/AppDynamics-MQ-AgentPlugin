@@ -2,6 +2,8 @@ package com.cisco.josouthe.wrapper;
 
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
+import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException;
+import com.cisco.josouthe.exception.ExceptionUtility;
 import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 
 import java.util.Hashtable;
@@ -51,11 +53,11 @@ public class MQQueueManagerWrapper extends BaseWrapper{
             IReflector constructor = interceptor.getNewReflectionBuilder()
                     .createObject("com.ibm.mq.MQQueueManager", String.class.getCanonicalName(), Hashtable.class.getCanonicalName() )
                     .build();
-            this.object = constructor.execute( classLoader, null,
-                    new Object[] { queue, connectionProperties });
+            this.object = constructor.execute( classLoader, null, new Object[] { queue, connectionProperties });
             logger.info("Initialized IBM MQ Queue Manager for monitoring, with reflection");
         } catch (Exception exception) {
-            logger.info(String.format("Error initializing reflective queue manager for %s Exception: %s",queue, exception.toString()),exception);
+            Throwable rootCause = ExceptionUtility.getRootCause(exception);
+            logger.info(String.format("Error initializing reflective queue manager for %s Exception: %s",queue, rootCause.toString()),rootCause);
         }
     }
 
