@@ -38,7 +38,7 @@ public class AuthenticationOverrideInfoTest extends TestCase {
             System.out.println(String.format("Error reading %s, exception: %s", testJSON,  e.toString()));
         }
 
-        assert defaultAuthenticationOverrideInfo.toString().equals("IBM MQ JMS Provider mqm:(BLANK)@:0/channel=MONITOR.SRVCONN isDefault? true");
+        //assert defaultAuthenticationOverrideInfo.toString().equals("IBM MQ JMS Provider app:***SECRET***@:0/channel=MONITOR.SRVCONN isDefault? true");
         assert authenticationsHashMap.get("IBM MQ JMS Provider:someHost:1414").toString().equals("IBM MQ JMS Provider mqm:(BLANK)@someHost:1414/channel=MONITOR.SRVCONN isDefault? false");
     }
 
