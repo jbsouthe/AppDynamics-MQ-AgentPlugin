@@ -56,10 +56,13 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
 
     public PCFMessageWrapper[] send( Object request ) {
         List<PCFMessageWrapper> responses = new ArrayList<>();
+        long startTime = System.currentTimeMillis();
         Object[] responseObjects = (Object[]) getReflectiveObject( this.object, send, request);
+        long durationTime = System.currentTimeMillis() - startTime;
         if( responseObjects != null )
             for( Object object : responseObjects )
                 responses.add( new PCFMessageWrapper(this.interceptor, object) );
+        logger.info(String.format("PCFMessageAgent.send( %s ) took %d milliseconds to return %d responses", request, durationTime, responses.size()));
         return responses.toArray(new PCFMessageWrapper[0]);
     }
 
