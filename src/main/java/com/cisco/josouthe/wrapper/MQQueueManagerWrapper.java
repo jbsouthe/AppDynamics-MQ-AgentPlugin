@@ -2,8 +2,7 @@ package com.cisco.josouthe.wrapper;
 
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
-import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException;
-import com.cisco.josouthe.exception.ExceptionUtility;
+import com.cisco.josouthe.util.ExceptionUtility;
 import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 
 import java.util.Hashtable;

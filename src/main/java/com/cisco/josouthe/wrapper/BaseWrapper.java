@@ -4,6 +4,7 @@ import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException;
+import com.cisco.josouthe.util.ExceptionUtility;
 import org.bouncycastle.jcajce.provider.symmetric.ARC4;
 
 public abstract class BaseWrapper {
@@ -81,7 +82,8 @@ public abstract class BaseWrapper {
                 value = method.execute(object.getClass().getClassLoader(), object);
             }
         } catch (ReflectorException e) {
-            interceptor.getLogger().info("Error in reflection call, method: "+ method.getClass().getCanonicalName() +" object: "+ object.getClass().getCanonicalName() +" exception: "+ e.getMessage(),e);
+            Throwable rootCause = ExceptionUtility.getRootCause(e);
+            interceptor.getLogger().info("Error in reflection call, method: "+ method.getClass().getCanonicalName() +" object: "+ object.getClass().getCanonicalName() +" exception: "+ rootCause.getMessage(),rootCause);
         }
         return value;
     }
