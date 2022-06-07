@@ -4,6 +4,7 @@ import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.cisco.josouthe.exception.UserNotAuthorizedException;
 import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 import com.cisco.josouthe.metric.IBMMQMetric;
+import com.cisco.josouthe.util.ExceptionUtility;
 import com.cisco.josouthe.util.MQConstants;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 import com.cisco.josouthe.wrapper.MQQueueManagerWrapper;
@@ -11,6 +12,9 @@ import com.cisco.josouthe.wrapper.MQQueueWrapper;
 
 import com.cisco.josouthe.wrapper.PCFMessageAgentWrapper;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.*;
 
 public class MQMonitor extends BaseJMSMonitor {
@@ -64,13 +68,17 @@ public class MQMonitor extends BaseJMSMonitor {
     @Override
     public void run() {
         logger.info(String.format("IBM MQ Monitor run method called for %s", connectionFactoryWrapper.toString()));
+        /*
         Map<String,Object> metricMap = agent.getMetrics( MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS"),
                 MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS_ATTRS"),
                 MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_ALL") );
+
+         */
+        if( queues.isEmpty() ) queues.add("queue:///DEV.QUEUE.1"); //for testing
         logger.info(String.format("Queue names: %s", queues.toString()));
         for( String qName : queues ) {
             try {
-                MQQueueWrapper mqQueueWrapper = mqQueueManager.accessQueue(qName, 8226);
+                MQQueueWrapper mqQueueWrapper = mqQueueManager.accessQueue(getQueueName(qName), 8226);
                 logger.info(String.format("MQQueue destQueue = qMgr.accessQueue(qName, openOptions);"));
                 int depthCurrent = mqQueueWrapper.getCurrentDepth();
                 logger.info(String.format("int %d = destQueue.getCurrentDepth();", depthCurrent));
@@ -138,10 +146,20 @@ public class MQMonitor extends BaseJMSMonitor {
 
                  */
             } catch (Exception mqException) {
-                logger.info(String.format("Error getting queue statistics from %s Exception: %s",qName, mqException.toString()),mqException);
-                mqException.printStackTrace();
+                Throwable sourceException = ExceptionUtility.getRootCause(mqException);
+                logger.info(String.format("Error getting queue statistics from %s Exception: %s",qName, sourceException.toString()),sourceException);
             }
         }
     }
 
+
+    public String getQueueName( String uri ) {
+        String name = uri;
+        try {
+            name = new URI(uri).getPath();
+        } catch (Exception exception) {
+            logger.info(String.format("Error attempting to get path from '%s'", uri));
+        }
+        return (name.startsWith("/") ? name.substring(1) : name);
+    }
 }

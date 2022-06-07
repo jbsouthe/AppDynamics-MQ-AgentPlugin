@@ -3,9 +3,8 @@ package com.cisco.josouthe.wrapper;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 
-
 public class PCFMessageWrapper extends BaseWrapper{
-    private IReflector addParameterArray, addParameterAtomic, getIntParameterValue, constructor;
+    private IReflector addParameterArray, addParameterAtomic, getIntParameterValue, constructor, getStringParameterValue, toString;
 
     public PCFMessageWrapper(AGenericInterceptor aGenericInterceptor, Object parentObject, Integer creationOptions) {
         super(aGenericInterceptor, null, parentObject);
@@ -19,6 +18,8 @@ public class PCFMessageWrapper extends BaseWrapper{
         addParameterArray = makeInvokeInstanceMethodReflector("addParameter", int.class.getCanonicalName(), "[I" );
         addParameterAtomic = makeInvokeInstanceMethodReflector("addParameter", int.class.getCanonicalName(), int.class.getCanonicalName() );
         getIntParameterValue = makeInvokeInstanceMethodReflector("getIntParameterValue", int.class.getCanonicalName());
+        getStringParameterValue = makeInvokeInstanceMethodReflector( "getStringParameterValue", int.class.getCanonicalName());
+        toString = makeInvokeInstanceMethodReflector("toString");
     }
 
     public PCFMessageWrapper(AGenericInterceptor aGenericInterceptor, Object message ) {
@@ -36,5 +37,17 @@ public class PCFMessageWrapper extends BaseWrapper{
 
     public Integer getIntParameterValue( int parameter ) {
         return (Integer) getReflectiveObject(this.object, getIntParameterValue, parameter);
+    }
+
+    public String getStringParameterValue( int parameter ) {
+        return (String) getReflectiveObject(this.object, getStringParameterValue, parameter);
+    }
+
+    public String getQueueName() {
+        return getStringParameterValue(2016); // this is CMQC.MQCA_Q_NAME
+    }
+
+    public String toString() {
+        return (String) getReflectiveObject(this.object, toString);
     }
 }

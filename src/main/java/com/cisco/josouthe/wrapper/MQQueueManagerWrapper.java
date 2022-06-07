@@ -4,6 +4,7 @@ import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.cisco.josouthe.util.ExceptionUtility;
 import com.cisco.josouthe.json.AuthenticationOverrideInfo;
+import com.ibm.mq.MQQueueManager;
 
 import java.util.Hashtable;
 
@@ -26,15 +27,17 @@ public class MQQueueManagerWrapper extends BaseWrapper{
         if( authenticationOverrideInfo != null && authenticationOverrideInfo.password != null ) password=authenticationOverrideInfo.password;
         init(jmsConnectionFactoryWrapper.getObject().getClass().getClassLoader());
         accessQueue= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName());
-        accessQueueWithOptions= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName(), Integer.class.getCanonicalName());
+        accessQueueWithOptions= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName(), int.class.getCanonicalName());
     }
 
     public MQQueueWrapper accessQueue( String name ) {
+        logger.info(String.format("accessQueue('%s')", name));
         Object mqQueueObject = getReflectiveObject(this.object, accessQueue, name);
         return new MQQueueWrapper(this.interceptor, mqQueueObject, this.object, name, null);
     }
 
     public MQQueueWrapper accessQueue(String name, int options) {
+        logger.info(String.format("accessQueue('%s', %d)", name, options));
         Object mqQueueObject = getReflectiveObject(this.object, accessQueueWithOptions, name, options);
         return new MQQueueWrapper(this.interceptor, mqQueueObject, this.object, name, options);
     }
