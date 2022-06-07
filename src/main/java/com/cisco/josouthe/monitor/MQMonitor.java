@@ -78,7 +78,8 @@ public class MQMonitor extends BaseJMSMonitor {
         logger.info(String.format("Queue names: %s", queues.toString()));
         for( String qName : queues ) {
             try {
-                MQQueueWrapper mqQueueWrapper = mqQueueManager.accessQueue(getQueueName(qName), 8226);
+                String shortQueueName = getQueueName(qName);
+                MQQueueWrapper mqQueueWrapper = mqQueueManager.accessQueue(shortQueueName, 8226);
                 logger.info(String.format("MQQueue destQueue = qMgr.accessQueue(qName, openOptions);"));
                 int depthCurrent = mqQueueWrapper.getCurrentDepth();
                 logger.info(String.format("int %d = destQueue.getCurrentDepth();", depthCurrent));
@@ -86,8 +87,8 @@ public class MQMonitor extends BaseJMSMonitor {
                 logger.info(String.format("int %d = destQueue.getMaximumDepth();", depthMax));
                 mqQueueWrapper.close();
 
-                reportMetric(String.format("%s|%s|current depth", this.providerName, qName), depthCurrent, "OBSERVATION", "AVERAGE", "COLLECTIVE");
-                reportMetric(String.format("%s|%s|maximum depth", this.providerName, qName), depthMax, "OBSERVATION", "AVERAGE", "COLLECTIVE");
+                reportMetric(String.format("%s|%s|%s|current depth", this.providerName, mqQueueManager.getName(), shortQueueName), depthCurrent, "OBSERVATION", "AVERAGE", "COLLECTIVE");
+                reportMetric(String.format("%s|%s|%s|maximum depth", this.providerName, mqQueueManager.getName(), shortQueueName), depthMax, "OBSERVATION", "AVERAGE", "COLLECTIVE");
 
 
 

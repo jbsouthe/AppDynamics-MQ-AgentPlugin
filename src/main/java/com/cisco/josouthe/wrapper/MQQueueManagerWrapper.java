@@ -72,4 +72,5 @@ public class MQQueueManagerWrapper extends BaseWrapper{
     public void setPort( Integer i ) { port=i; }
     public String getChannel() { return channel; }
     public void setChannel( String s ) { channel=s; }
+    public String getName() { return queue; }
 }
