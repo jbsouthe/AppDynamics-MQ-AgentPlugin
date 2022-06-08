@@ -18,5 +18,6 @@ public class MQMonitorTest extends TestCase {
         }
         finalName = (finalName.startsWith("/") ? finalName.substring(1) : finalName);
         System.out.println(String.format("in '%s' -> '%s' out",queueName, finalName));
+        assert "DEV.QUEUE.1".equals(finalName);
     }
 }
