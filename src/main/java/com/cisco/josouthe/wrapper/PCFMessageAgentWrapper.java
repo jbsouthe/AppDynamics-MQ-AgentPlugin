@@ -26,12 +26,8 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
             this.object = constructor.execute( mqQueueManager.getObject().getClass().getClassLoader(), null, new Object[] { mqQueueManager.getObject() } );
             logger.info("Initialized IBM MQ PCFMessageAgent for monitoring, with reflection");
         } catch (Exception exception) {
-            if( exception.getCause() instanceof java.lang.reflect.InvocationTargetException && "com.ibm.mq.headers.MQExceptionWrapper".equals(exception.getCause().getCause().getClass().getCanonicalName())) {
-                if( "MQJE001: Completion Code '2', Reason '2035'.".equals( exception.getCause().getCause().getMessage() ) ) {
-                    throw new UserNotAuthorizedException( mqQueueManager.getHostname(), mqQueueManager.getPort(), mqQueueManager.getUserID(), mqQueueManager.getChannel(), exception.getCause().getCause().getMessage());
-                }
-                //logger.info(String.format("Exception cause class: '%s' message: '%s'",mqException.getClass().getCanonicalName(), mqException.getMessage()));
-            }
+            if( ExceptionUtility.exceptionMatches(exception, "MQJE001: Completion Code '2', Reason '2035'.") )
+                    throw new UserNotAuthorizedException( mqQueueManager, exception.getCause().getCause().getMessage());
             Throwable sourceException = ExceptionUtility.getRootCause(exception);
             logger.info(String.format("Error initializing reflective PCFMessageAgent Exception: %s", sourceException.toString()),sourceException);
         }
@@ -61,7 +57,7 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
         long durationTime = System.currentTimeMillis() - startTime;
         if( responseObjects != null )
             for( Object object : responseObjects )
-                responses.add( new PCFMessageWrapper(this.interceptor, object) );
+                responses.add( new PCFMessageWrapper(this.interceptor, object, this.getObject()) );
         logger.info(String.format("PCFMessageAgent.send( %s ) took %d milliseconds to return %d responses", request, durationTime, responses.size()));
         return responses.toArray(new PCFMessageWrapper[0]);
     }
