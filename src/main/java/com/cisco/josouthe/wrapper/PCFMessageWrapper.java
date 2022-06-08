@@ -10,7 +10,7 @@ public class PCFMessageWrapper extends BaseWrapper{
         super(aGenericInterceptor, null, parentObject);
         try{
             constructor = interceptor.getNewReflectionBuilder().createObject("com.ibm.mq.headers.pcf.PCFMessage", new String[] { int.class.getCanonicalName() }).build();
-            this.object = constructor.execute( parentObject.getClass().getClassLoader(), parentObject, new Object[] { creationOptions } );
+            this.object = constructor.execute( parentObject.getClass().getClassLoader(), null, new Object[] { creationOptions } );
             logger.info("Initialized IBM MQ PCFMessage for monitoring, with reflection");
         } catch (Exception exception) {
             logger.info(String.format("Error initializing reflective PCFMessage Exception: %s", exception.toString()),exception);
@@ -22,12 +22,15 @@ public class PCFMessageWrapper extends BaseWrapper{
         toString = makeInvokeInstanceMethodReflector("toString");
     }
 
-    public PCFMessageWrapper(AGenericInterceptor aGenericInterceptor, Object message ) {
-        super(aGenericInterceptor, message, null);
+    public PCFMessageWrapper(AGenericInterceptor aGenericInterceptor, Object message, Object parentObject ) {
+        super(aGenericInterceptor, message, parentObject);
     }
 
     public void addParameter( int parameter, int[] values ) {
-        if( values.length == 1 ) addParameter(parameter, values[0]);
+        if( values.length == 1 ) {
+            addParameter(parameter, values[0]);
+            return;
+        }
         getReflectiveObject(this.object, addParameterArray, parameter, values);
     }
 
