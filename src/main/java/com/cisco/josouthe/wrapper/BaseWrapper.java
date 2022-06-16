@@ -1,5 +1,6 @@
 package com.cisco.josouthe.wrapper;
 
+import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
@@ -8,15 +9,18 @@ import com.cisco.josouthe.util.ExceptionUtility;
 import org.bouncycastle.jcajce.provider.symmetric.ARC4;
 
 public abstract class BaseWrapper {
-    protected AGenericInterceptor interceptor;
+    protected ASDKPlugin interceptor;
     protected ISDKLogger logger;
     protected Object object, parentObject;
 
-    public BaseWrapper(AGenericInterceptor aGenericInterceptor, Object objectToWrap, Object parentObject) {
-        this.interceptor=aGenericInterceptor;
+    public BaseWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
+        if( aGenericInterceptor != null ) {
+            this.interceptor = aGenericInterceptor;
+            this.logger = aGenericInterceptor.getLogger();
+        }
         this.object=objectToWrap;
         this.parentObject=parentObject;
-        this.logger= aGenericInterceptor.getLogger();
+
     }
 
     public Boolean matches( Object otherObject ) {

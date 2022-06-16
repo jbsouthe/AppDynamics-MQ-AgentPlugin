@@ -1,12 +1,13 @@
 package com.cisco.josouthe.wrapper;
 
+import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.cisco.josouthe.util.ExceptionUtility;
 import com.cisco.josouthe.json.AuthenticationOverrideInfo;
-import com.ibm.mq.MQQueueManager;
 
 import java.util.Hashtable;
+import java.util.Map;
 
 public class MQQueueManagerWrapper extends BaseWrapper{
 
@@ -14,7 +15,20 @@ public class MQQueueManagerWrapper extends BaseWrapper{
     private Integer port;
     private IReflector accessQueue, accessQueueWithOptions;
 
-    public MQQueueManagerWrapper(AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper jmsConnectionFactoryWrapper, AuthenticationOverrideInfo authenticationOverrideInfo) {
+    public MQQueueManagerWrapper(ASDKPlugin asdkPlugin, String qMgrName, Map<String,Object> connectionPropertiesMap ) { //for Junit
+        super(asdkPlugin,null, null);
+        this.queue = qMgrName;
+        this.hostname = (String) connectionPropertiesMap.get("hostname");
+        this.port = (Integer) connectionPropertiesMap.get("port");
+        this.channel = (String) connectionPropertiesMap.get("channel");
+        this.userID = (String) connectionPropertiesMap.get("userID");
+        this.password = (String) connectionPropertiesMap.get("password");
+        init( this.getClass().getClassLoader());
+        accessQueue= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName());
+        accessQueueWithOptions= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName(), int.class.getCanonicalName());
+    }
+
+    public MQQueueManagerWrapper(ASDKPlugin aGenericInterceptor, JmsConnectionFactoryWrapper jmsConnectionFactoryWrapper, AuthenticationOverrideInfo authenticationOverrideInfo) {
         super(aGenericInterceptor, null, null);
         hostname = jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_HOST_NAME");
         port = jmsConnectionFactoryWrapper.getIntProperty("XMSC_WMQ_PORT");

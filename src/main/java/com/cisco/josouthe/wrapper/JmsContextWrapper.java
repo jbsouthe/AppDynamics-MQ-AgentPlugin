@@ -1,5 +1,6 @@
 package com.cisco.josouthe.wrapper;
 
+import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 
@@ -14,7 +15,7 @@ public class JmsContextWrapper extends BaseWrapper{
     private String connectionName;
 
 
-    public JmsContextWrapper(AGenericInterceptor aGenericInterceptor, Object objectToWrap, Object parentObject) {
+    public JmsContextWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
         super(aGenericInterceptor, objectToWrap, parentObject);
         getMetaData = makeInvokeInstanceMethodReflector("getMetaData");
         getJMSProviderName = makeInvokeInstanceMethodReflector("getJMSProviderName");

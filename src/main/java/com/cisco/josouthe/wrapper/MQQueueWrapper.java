@@ -1,5 +1,6 @@
 package com.cisco.josouthe.wrapper;
 
+import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.ibm.mq.MQQueue;
@@ -9,7 +10,7 @@ public class MQQueueWrapper extends BaseWrapper{
     private String name;
     private Integer options;
 
-    public MQQueueWrapper(AGenericInterceptor aGenericInterceptor, Object objectToWrap, Object parentObject, String name, Integer options) {
+    public MQQueueWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject, String name, Integer options) {
         super(aGenericInterceptor, objectToWrap, parentObject);
 
         getCurrentDepth = makeInvokeInstanceMethodReflector("getCurrentDepth");

@@ -1,5 +1,6 @@
 package com.cisco.josouthe.wrapper;
 
+import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 
@@ -15,7 +16,7 @@ public class JmsConnectionFactoryWrapper extends BaseWrapper{
     private Set<JmsContextWrapper> contextSet = new HashSet<>();
     private Set<String> queueSet = new HashSet<>();
 
-    public JmsConnectionFactoryWrapper(AGenericInterceptor aGenericInterceptor, Object objectToWrap) {
+    public JmsConnectionFactoryWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap) {
         super(aGenericInterceptor, objectToWrap, null);
 
         getStringProperty = makeInvokeInstanceMethodReflector("getStringProperty", String.class.getCanonicalName() );
