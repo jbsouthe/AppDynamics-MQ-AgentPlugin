@@ -5,6 +5,7 @@ import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException;
+import com.cisco.josouthe.exception.MQErrorException;
 import com.cisco.josouthe.util.ExceptionUtility;
 import org.bouncycastle.jcajce.provider.symmetric.ARC4;
 
@@ -20,7 +21,7 @@ public abstract class BaseWrapper {
         }
         this.object=objectToWrap;
         this.parentObject=parentObject;
-
+        initMethods();
     }
 
     abstract void initMethods();
@@ -51,7 +52,7 @@ public abstract class BaseWrapper {
             value = (String) method.execute(object.getClass().getClassLoader(), object);
             if( value == null ) return defaultString;
         } catch (ReflectorException e) {
-            interceptor.getLogger().info("Error in reflection call, exception: "+ e.getMessage(),e);
+            logException(e, object, method);
         }
         return value;
     }
@@ -63,7 +64,7 @@ public abstract class BaseWrapper {
             value = (Integer) method.execute(object.getClass().getClassLoader(), object);
             if( value == null ) return defaultInteger;
         } catch (ReflectorException e) {
-            interceptor.getLogger().info("Error in reflection call, exception: "+ e.getMessage(),e);
+            logException(e, object, method);
         }
         return value;
     }
@@ -87,10 +88,19 @@ public abstract class BaseWrapper {
             } else {
                 value = method.execute(object.getClass().getClassLoader(), object);
             }
-        } catch (ReflectorException e) {
-            Throwable rootCause = ExceptionUtility.getRootCause(e);
-            interceptor.getLogger().info("Error in reflection call, method: "+ method.getClass().getCanonicalName() +" object: "+ object.getClass().getCanonicalName() +" exception: "+ rootCause.getMessage(),rootCause);
+        } catch (ReflectorException exception) {
+            logException(exception, object, method);
         }
         return value;
+    }
+
+    private void logException( ReflectorException reflectorException, Object object, IReflector method ) {
+        Throwable sourceException = ExceptionUtility.getRootCause(reflectorException);
+        MQErrorException mqErrorException = ExceptionUtility.processException(reflectorException);
+        if( mqErrorException == null ) {
+            logger.info(String.format("Error in reflection call, method: %s object: %s exception: %s", method.getClass().getCanonicalName(), object.getClass().getCanonicalName(), sourceException.toString()),sourceException);
+        }else {
+            logger.info(String.format("MQError in reflection call, method: %s object: %s error: %s", method.getClass().getCanonicalName(), object.getClass().getCanonicalName(), mqErrorException.getMessage()),mqErrorException);
+        }
     }
 }
