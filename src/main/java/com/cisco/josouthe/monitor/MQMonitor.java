@@ -68,12 +68,11 @@ public class MQMonitor extends BaseJMSMonitor {
     @Override
     public void run() {
         logger.info(String.format("IBM MQ Monitor run method called for %s", connectionFactoryWrapper.toString()));
-        /*
-        Map<String,Object> metricMap = agent.getMetrics( MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS"),
-                MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS_ATTRS"),
-                MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_ALL") );
+        Map<Integer, Integer[]> params = new HashMap<>();
+        params.put( MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS_ATTRS"),
+                new Integer[] { MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_ALL") });
+        Map<String,Object> metricMap = agent.getMetrics( MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS"), params);
 
-         */
         if( queues.isEmpty() ) queues.add("queue:///DEV.QUEUE.1"); //for testing
         logger.info(String.format("Queue names: %s", queues.toString()));
         for( String qName : queues ) {
