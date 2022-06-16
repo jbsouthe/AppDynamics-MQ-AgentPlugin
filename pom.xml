@@ -186,7 +186,7 @@
             <archive>
                 <addMavenDescriptor>false</addMavenDescriptor>
                 <manifestEntries>
-                    <Plugin-Classes>com.cisco.josouthe.QManagerLifeCycleInterceptor</Plugin-Classes>
+                    <Plugin-Classes>com.cisco.josouthe.interceptor.QManagerLifeCycleInterceptor</Plugin-Classes>
                 </manifestEntries>
             </archive>
 		  <outputDirectory>${basedir}</outputDirectory>

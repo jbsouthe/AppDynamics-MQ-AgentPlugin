@@ -1,4 +1,4 @@
-package com.cisco.josouthe;
+package com.cisco.josouthe.interceptor;
 
 import com.appdynamics.instrumentation.sdk.Rule;
 import com.appdynamics.instrumentation.sdk.SDKClassMatchType;
@@ -7,10 +7,10 @@ import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 import com.cisco.josouthe.monitor.BaseJMSMonitor;
 import com.cisco.josouthe.monitor.MQMonitor;
+import com.cisco.josouthe.monitor.Scheduler;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 import com.cisco.josouthe.wrapper.JmsContextWrapper;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.json.JSONTokener;
 
 

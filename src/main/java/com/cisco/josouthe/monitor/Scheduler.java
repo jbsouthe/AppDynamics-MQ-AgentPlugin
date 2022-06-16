@@ -1,9 +1,6 @@
-package com.cisco.josouthe;
-
-import com.cisco.josouthe.monitor.BaseJMSMonitor;
+package com.cisco.josouthe.monitor;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 public class Scheduler extends Thread {
     private static final String THREAD_NAME = "AppDynamics MQ Monitor Thread";

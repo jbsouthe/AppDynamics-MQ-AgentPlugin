@@ -1,6 +1,6 @@
 package com.cisco.josouthe;
 
-import com.appdynamics.instrumentation.sdk.Rule;
+import com.cisco.josouthe.interceptor.QManagerLifeCycleInterceptor;
 import junit.framework.TestCase;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
