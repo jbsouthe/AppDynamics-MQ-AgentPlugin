@@ -12,9 +12,7 @@ import com.cisco.josouthe.wrapper.MQQueueWrapper;
 
 import com.cisco.josouthe.wrapper.PCFMessageAgentWrapper;
 
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.*;
 
 public class MQMonitor extends BaseJMSMonitor {
@@ -34,33 +32,11 @@ public class MQMonitor extends BaseJMSMonitor {
         } catch (UserNotAuthorizedException e) {
             logger.debug(String.format("Error creating PCFMessageAgent, %s", e.toString()));
         }
-        /*
-        try {
-            this.mqQueueManager = new MQQueueManager(connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), connectionFactoryWrapper.getPropertyHashTable());
-            logger.debug("Initialized IBM MQ Queue Manager for monitoring");
-        } catch (MQException mqException) {
-            logger.debug(String.format("Error initializing queue manager for %s Exception: %s",connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), mqException.toString()),mqException);
-            useReflectionInterfaces=true;
-        }
-        if( useReflectionInterfaces ) { //we already have the MQ classes loaded in the parent classloader, so the files we brought can't be used since they won't be found until after the loaded ones, causing an exception
-            logger.debug(String.format("Attempting to initialize reflective class interface for IBM MQ Queue Manager for monitoring"));
-            this.interceptedClassLoader = connectionFactoryWrapper.getObject().getClass().getClassLoader();
-            try{
-                Class<?> clazz = interceptedClassLoader.loadClass("com.ibm.mq.MQQueueManager");
-                Constructor constructor = clazz.getConstructor( String.class, Hashtable.class);
-                Hashtable env = connectionFactoryWrapper.getPropertyHashTable("XMSC_WMQ_HOST_NAME", "XMSC_WMQ_PORT", "XMSC_WMQ_CHANNEL", "XMSC_USERID", "XMSC_PASSWORD");
-                env.put("XMSC_WMQ_CONNECTION_MODE", WMQConstants.WMQ_CM_CLIENT );
-                this.mqQueueManager = (MQQueueManager) constructor.newInstance(connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), env);
-                logger.debug("Initialized IBM MQ Queue Manager for monitoring, with reflection");
-            } catch (Exception exception) {
-                logger.debug(String.format("Error initializing reflective queue manager for %s Exception: %s",connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), exception.toString()),exception);
-            }
-        }
-         */
+
         metrics = new ArrayList<>();
-        metrics.add(new IBMMQMetric("Status", "com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS", MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS"),
+        metrics.add(new IBMMQMetric("Status", "CMQCFC.MQIACF_Q_MGR_STATUS", MQConstants.getIntFromConstant("CMQCFC.MQIACF_Q_MGR_STATUS"),
                 "OBSERVATION", "AVERAGE", "INDIVIDUAL"));
-        metrics.add(new IBMMQMetric("ConnectionCount", "com.ibm.mq.constants.CMQCFC.MQIACF_CONNECTION_COUNT", MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_CONNECTION_COUNT"),
+        metrics.add(new IBMMQMetric("ConnectionCount", "CMQCFC.MQIACF_CONNECTION_COUNT", MQConstants.getIntFromConstant("CMQCFC.MQIACF_CONNECTION_COUNT"),
                 "OBSERVATION", "AVERAGE", "INDIVIDUAL"));
     }
 
@@ -69,9 +45,9 @@ public class MQMonitor extends BaseJMSMonitor {
     public void run() {
         logger.debug(String.format("IBM MQ Monitor run method called for %s", connectionFactoryWrapper.toString()));
         Map<Integer, Integer[]> params = new HashMap<>();
-        params.put( MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS_ATTRS"),
-                new Integer[] { MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_ALL") });
-        Map<String,Object> metricMap = agent.getMetrics( MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS"), params);
+        params.put( MQConstants.getIntFromConstant("CMQCFC.MQIACF_Q_MGR_STATUS_ATTRS"),
+                new Integer[] { MQConstants.getIntFromConstant("CMQCFC.MQIACF_ALL") });
+        Map<String,Object> metricMap = agent.getMetrics( MQConstants.getIntFromConstant("CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS"), params);
 
         if( queues.isEmpty() ) queues.add("queue:///DEV.QUEUE.1"); //for testing
         logger.debug(String.format("Queue names: %s", queues.toString()));
