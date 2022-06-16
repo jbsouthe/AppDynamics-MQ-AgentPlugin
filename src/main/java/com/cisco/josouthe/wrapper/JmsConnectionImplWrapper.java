@@ -9,7 +9,9 @@ public class JmsConnectionImplWrapper extends BaseWrapper{
 
     public JmsConnectionImplWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
         super(aGenericInterceptor, objectToWrap, parentObject);
+    }
 
+    protected void initMethods() {
         getStringProperty = makeInvokeInstanceMethodReflector("getStringProperty", String.class.getCanonicalName() );
         getIntProperty = makeInvokeInstanceMethodReflector("getIntProperty", String.class.getCanonicalName());
         getBooleanProperty = makeInvokeInstanceMethodReflector("getBooleanProperty", String.class.getCanonicalName());

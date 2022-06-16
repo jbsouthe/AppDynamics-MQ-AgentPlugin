@@ -12,21 +12,26 @@ public class PCFMessageWrapper extends BaseWrapper{
     public PCFMessageWrapper(ASDKPlugin aGenericInterceptor, Object parentObject, Integer creationOptions) {
         super(aGenericInterceptor, null, parentObject);
         try{
-            constructor = interceptor.getNewReflectionBuilder().createObject("com.ibm.mq.headers.pcf.PCFMessage", new String[] { int.class.getCanonicalName() }).build();
             this.object = constructor.execute( parentObject.getClass().getClassLoader(), null, new Object[] { creationOptions } );
             logger.info("Initialized IBM MQ PCFMessage for monitoring, with reflection");
         } catch (Exception exception) {
             logger.info(String.format("Error initializing reflective PCFMessage Exception: %s", exception.toString()),exception);
         }
+    }
+
+    public PCFMessageWrapper(ASDKPlugin aGenericInterceptor, Object message, Object parentObject ) {
+        super(aGenericInterceptor, message, parentObject);
+        initMethods();
+        logger.info(String.format("Initialized IBM MQ PCFMessage from object: %s", this.toString()));
+    }
+
+    protected void initMethods() {
+        constructor = interceptor.getNewReflectionBuilder().createObject("com.ibm.mq.headers.pcf.PCFMessage", new String[] { int.class.getCanonicalName() }).build();
         addParameterArray = makeInvokeInstanceMethodReflector("addParameter", int.class.getCanonicalName(), "[I" );
         addParameterAtomic = makeInvokeInstanceMethodReflector("addParameter", int.class.getCanonicalName(), int.class.getCanonicalName() );
         getIntParameterValue = makeInvokeInstanceMethodReflector("getIntParameterValue", int.class.getCanonicalName());
         getStringParameterValue = makeInvokeInstanceMethodReflector( "getStringParameterValue", int.class.getCanonicalName());
         toString = makeInvokeInstanceMethodReflector("toString");
-    }
-
-    public PCFMessageWrapper(ASDKPlugin aGenericInterceptor, Object message, Object parentObject ) {
-        super(aGenericInterceptor, message, parentObject);
     }
 
     public void addParameter(int parameter, int[] values ) {

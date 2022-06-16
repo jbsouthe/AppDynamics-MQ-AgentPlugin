@@ -18,13 +18,14 @@ public class JmsConnectionFactoryWrapper extends BaseWrapper{
 
     public JmsConnectionFactoryWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap) {
         super(aGenericInterceptor, objectToWrap, null);
+    }
 
+    protected void initMethods() {
         getStringProperty = makeInvokeInstanceMethodReflector("getStringProperty", String.class.getCanonicalName() );
         getIntProperty = makeInvokeInstanceMethodReflector("getIntProperty", String.class.getCanonicalName());
         getBooleanProperty = makeInvokeInstanceMethodReflector("getBooleanProperty", String.class.getCanonicalName());
         getPropertyNames = makeInvokeInstanceMethodReflector("getPropertyNames"); //returns Enumeration<String>
         getObjectProperty = makeInvokeInstanceMethodReflector("getObjectProperty", String.class.getCanonicalName());
-
         createContext = makeInvokeInstanceMethodReflector("createContext");
     }
 

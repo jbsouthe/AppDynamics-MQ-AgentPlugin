@@ -17,10 +17,13 @@ public class JmsContextWrapper extends BaseWrapper{
 
     public JmsContextWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
         super(aGenericInterceptor, objectToWrap, parentObject);
+        this.metaDataObject = getReflectiveObject(this.object, getMetaData);
+    }
+
+    protected void initMethods() {
         getMetaData = makeInvokeInstanceMethodReflector("getMetaData");
         getJMSProviderName = makeInvokeInstanceMethodReflector("getJMSProviderName");
         internalJmsConnectionImpl = makeAccessFieldValueReflector("connection");
-        this.metaDataObject = getReflectiveObject(this.object, getMetaData);
     }
 
     public String getJMSProviderName() {

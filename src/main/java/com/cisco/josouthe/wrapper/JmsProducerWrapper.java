@@ -8,4 +8,8 @@ public class JmsProducerWrapper extends BaseWrapper{
     public JmsProducerWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
         super(aGenericInterceptor, objectToWrap, parentObject);
     }
+
+    protected void initMethods() {
+
+    }
 }

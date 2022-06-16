@@ -1,7 +1,6 @@
 package com.cisco.josouthe.wrapper;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
-import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException;
 import com.cisco.josouthe.exception.MQErrorException;
@@ -13,9 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cisco.josouthe.util.PrintUtility;
-import com.ibm.mq.headers.pcf.MQCFBF;
-import com.ibm.mq.headers.pcf.PCFParameter;
 
 public class PCFMessageAgentWrapper extends BaseWrapper{
     private IReflector send;
@@ -24,11 +20,6 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
     public PCFMessageAgentWrapper(ASDKPlugin aGenericInterceptor, MQQueueManagerWrapper mqQueueManager) throws UserNotAuthorizedException {
         super(aGenericInterceptor, null, mqQueueManager.getObject());
         try{
-            send = makeInvokeInstanceMethodReflector("send", "com.ibm.mq.headers.pcf.PCFMessage");
-            setWaitInterval = makeInvokeInstanceMethodReflector( "setWaitInterval", int.class.getCanonicalName(), int.class.getCanonicalName() );
-            constructor = interceptor.getNewReflectionBuilder()
-                    .createObject("com.ibm.mq.headers.pcf.PCFMessageAgent", "com.ibm.mq.MQQueueManager")
-                    .build();
             this.object = constructor.execute( mqQueueManager.getObject().getClass().getClassLoader(), null, new Object[] { mqQueueManager.getObject() } );
             setWaitInterval(5);
             logger.info("Initialized IBM MQ PCFMessageAgent for monitoring, with reflection");
@@ -44,6 +35,14 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
                 logger.info(String.format("Error initializing reflective PCFMessageAgent Exception: %s", mqErrorException.getMessage()),mqErrorException);
             }
         }
+    }
+
+    protected void initMethods() {
+        send = makeInvokeInstanceMethodReflector("send", "com.ibm.mq.headers.pcf.PCFMessage");
+        setWaitInterval = makeInvokeInstanceMethodReflector( "setWaitInterval", int.class.getCanonicalName(), int.class.getCanonicalName() );
+        constructor = interceptor.getNewReflectionBuilder()
+                .createObject("com.ibm.mq.headers.pcf.PCFMessageAgent", "com.ibm.mq.MQQueueManager")
+                .build();
     }
 
     public Map<String,Object> getMetrics(Integer command, Map<Integer, Integer[]> parameterMap) {
@@ -97,8 +96,9 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
         }
         long durationTime = System.currentTimeMillis() - startTime;
         if( responseObjects != null )
-            for( Object object : responseObjects )
-                responses.add( new PCFMessageWrapper(this.interceptor, object, this.getObject()) );
+            for( Object object : responseObjects ) {
+                responses.add(new PCFMessageWrapper(this.interceptor, object, this.getObject()));
+            }
         logger.info(String.format("PCFMessageAgent.send( %s ) took %d milliseconds to return %d responses", request, durationTime, responses.size()));
         return responses.toArray(new PCFMessageWrapper[0]);
     }

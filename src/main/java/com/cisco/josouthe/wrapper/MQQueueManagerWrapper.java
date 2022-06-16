@@ -13,7 +13,7 @@ public class MQQueueManagerWrapper extends BaseWrapper{
 
     private String hostname, userID, password, queue, channel;
     private Integer port;
-    private IReflector accessQueue, accessQueueWithOptions;
+    private IReflector constructor, accessQueue, accessQueueWithOptions;
 
     public MQQueueManagerWrapper(ASDKPlugin asdkPlugin, String qMgrName, Map<String,Object> connectionPropertiesMap ) { //for Junit
         super(asdkPlugin,null, null);
@@ -24,8 +24,6 @@ public class MQQueueManagerWrapper extends BaseWrapper{
         this.userID = (String) connectionPropertiesMap.get("userID");
         this.password = (String) connectionPropertiesMap.get("password");
         init( this.getClass().getClassLoader());
-        accessQueue= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName());
-        accessQueueWithOptions= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName(), int.class.getCanonicalName());
     }
 
     public MQQueueManagerWrapper(ASDKPlugin aGenericInterceptor, JmsConnectionFactoryWrapper jmsConnectionFactoryWrapper, AuthenticationOverrideInfo authenticationOverrideInfo) {
@@ -40,6 +38,12 @@ public class MQQueueManagerWrapper extends BaseWrapper{
         password = jmsConnectionFactoryWrapper.getStringProperty("XMSC_PASSWORD");
         if( authenticationOverrideInfo != null && authenticationOverrideInfo.password != null ) password=authenticationOverrideInfo.password;
         init(jmsConnectionFactoryWrapper.getObject().getClass().getClassLoader());
+    }
+
+    protected void initMethods() {
+        constructor = interceptor.getNewReflectionBuilder()
+                .createObject("com.ibm.mq.MQQueueManager", String.class.getCanonicalName(), Hashtable.class.getCanonicalName() )
+                .build();
         accessQueue= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName());
         accessQueueWithOptions= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName(), int.class.getCanonicalName());
     }
@@ -66,9 +70,6 @@ public class MQQueueManagerWrapper extends BaseWrapper{
             connectionProperties.put("userID", userID);
             connectionProperties.put("password", password);
             logger.info(String.format("jms queue '%s' connection properties: %s", queue, connectionProperties));
-            IReflector constructor = interceptor.getNewReflectionBuilder()
-                    .createObject("com.ibm.mq.MQQueueManager", String.class.getCanonicalName(), Hashtable.class.getCanonicalName() )
-                    .build();
             this.object = constructor.execute( classLoader, null, new Object[] { queue, connectionProperties });
             logger.info("Initialized IBM MQ Queue Manager for monitoring, with reflection");
         } catch (Exception exception) {

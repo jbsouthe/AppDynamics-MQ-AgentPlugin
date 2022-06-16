@@ -23,6 +23,8 @@ public abstract class BaseWrapper {
 
     }
 
+    abstract void initMethods();
+
     public Boolean matches( Object otherObject ) {
         if( otherObject == null ) return false;
         return otherObject == this.object;
