@@ -1,12 +1,15 @@
 package com.cisco.josouthe.wrapper;
 
+import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
+
+import java.util.Arrays;
 
 public class PCFMessageWrapper extends BaseWrapper{
     private IReflector addParameterArray, addParameterAtomic, getIntParameterValue, constructor, getStringParameterValue, toString;
 
-    public PCFMessageWrapper(AGenericInterceptor aGenericInterceptor, Object parentObject, Integer creationOptions) {
+    public PCFMessageWrapper(ASDKPlugin aGenericInterceptor, Object parentObject, Integer creationOptions) {
         super(aGenericInterceptor, null, parentObject);
         try{
             constructor = interceptor.getNewReflectionBuilder().createObject("com.ibm.mq.headers.pcf.PCFMessage", new String[] { int.class.getCanonicalName() }).build();
@@ -22,18 +25,19 @@ public class PCFMessageWrapper extends BaseWrapper{
         toString = makeInvokeInstanceMethodReflector("toString");
     }
 
-    public PCFMessageWrapper(AGenericInterceptor aGenericInterceptor, Object message, Object parentObject ) {
+    public PCFMessageWrapper(ASDKPlugin aGenericInterceptor, Object message, Object parentObject ) {
         super(aGenericInterceptor, message, parentObject);
     }
 
-    public void addParameter( int parameter, int[] values ) {
-        if( values.length == 1 ) {
-            addParameter(parameter, values[0]);
-            return;
-        }
+    public void addParameter(int parameter, int[] values ) {
         getReflectiveObject(this.object, addParameterArray, parameter, values);
     }
 
+    public void addParameter( int parameter, Integer[] integerValues ) {
+        addParameter(parameter, Arrays.stream(integerValues).mapToInt(Integer::intValue).toArray());
+    }
+
+    @Deprecated //this causes the queue manager to crash under certain conditions! always send an int array
     public void addParameter( int parameter, int value ) {
         getReflectiveObject(this.object, addParameterAtomic, parameter, value);
     }
