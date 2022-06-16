@@ -27,7 +27,6 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
             if( ExceptionUtility.exceptionMatches(exception, "MQJE001: Completion Code '2', Reason '2035'.") )
                     throw new UserNotAuthorizedException( mqQueueManager, exception.getCause().getCause().getMessage());
             Throwable sourceException = ExceptionUtility.getRootCause(exception);
-            //logger.info(String.format("Error initializing reflective PCFMessageAgent Exception: %s", sourceException.toString()),sourceException);
             MQErrorException mqErrorException = ExceptionUtility.processException(exception);
             if( mqErrorException == null ) {
                 logger.info(String.format("Error initializing reflective PCFMessageAgent Exception: %s", sourceException.toString()),sourceException);

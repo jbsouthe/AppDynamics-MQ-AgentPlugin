@@ -122,8 +122,11 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
             context.addQueue(queueName);
             if( context.getConnectionName() != null && connectionFactoryHostMap.containsKey(context.getConnectionName())) {
                 String key = String.format("%s:%s", context.getJMSProviderName(), context.getConnectionName());
-                monitors.get(key).addQueue(queueName);
-                getLogger().info(String.format("Added Queue '%s' to Monitor for '%s'", queueName, monitors.get(key).toString() ));
+                BaseJMSMonitor jmsMonitor = monitors.get(key);
+                if( jmsMonitor != null ) {
+                    jmsMonitor.addQueue(queueName);
+                    getLogger().info(String.format("Added Queue '%s' to Monitor for '%s'", queueName, monitors.get(key).toString()));
+                }
             } else {
                 getLogger().info(String.format("Connection not found for this object: %s", context.getConnectionName()));
             }

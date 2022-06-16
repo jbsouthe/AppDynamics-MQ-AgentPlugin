@@ -1,15 +1,13 @@
 package com.cisco.josouthe.wrapper;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
-import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public class JmsContextWrapper extends BaseWrapper{
-    private IReflector getMetaData, getJMSProviderName;
-    private IReflector internalJmsConnectionImpl;
+    private IReflector getMetaData, getJMSProviderName, internalJmsConnectionImpl;
     private Object metaDataObject;
     private Set<String> queueNames = new HashSet<>();
     private String connectionName;
@@ -28,7 +26,7 @@ public class JmsContextWrapper extends BaseWrapper{
 
     public String getJMSProviderName() {
         if( metaDataObject == null ) this.metaDataObject = getReflectiveObject(this.object, getMetaData);
-        return (String) getReflectiveObject(metaDataObject, getJMSProviderName);
+        return getReflectiveString(metaDataObject, getJMSProviderName, "UNKNOWN-PROVIDER");
     }
 
     public void addQueue( String name ) {
