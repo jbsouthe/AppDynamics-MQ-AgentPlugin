@@ -13,16 +13,16 @@ public class PCFMessageWrapper extends BaseWrapper{
         super(aGenericInterceptor, null, parentObject);
         try{
             this.object = constructor.execute( parentObject.getClass().getClassLoader(), null, new Object[] { creationOptions } );
-            logger.info("Initialized IBM MQ PCFMessage for monitoring, with reflection");
+            logger.debug("Initialized IBM MQ PCFMessage for monitoring, with reflection");
         } catch (Exception exception) {
-            logger.info(String.format("Error initializing reflective PCFMessage Exception: %s", exception.toString()),exception);
+            logger.debug(String.format("Error initializing reflective PCFMessage Exception: %s", exception.toString()),exception);
         }
     }
 
     public PCFMessageWrapper(ASDKPlugin aGenericInterceptor, Object message, Object parentObject ) {
         super(aGenericInterceptor, message, parentObject);
         initMethods();
-        logger.info(String.format("Initialized IBM MQ PCFMessage from object: %s", this.toString()));
+        logger.debug(String.format("Initialized IBM MQ PCFMessage from object: %s", this.toString()));
     }
 
     protected void initMethods() {

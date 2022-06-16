@@ -98,9 +98,9 @@ public abstract class BaseWrapper {
         Throwable sourceException = ExceptionUtility.getRootCause(reflectorException);
         MQErrorException mqErrorException = ExceptionUtility.processException(reflectorException);
         if( mqErrorException == null ) {
-            logger.info(String.format("Error in reflection call, method: %s object: %s exception: %s", method.getClass().getCanonicalName(), object.getClass().getCanonicalName(), sourceException.toString()),sourceException);
+            logger.debug(String.format("Error in reflection call, method: %s object: %s exception: %s", method.getClass().getCanonicalName(), object.getClass().getCanonicalName(), sourceException.toString()),sourceException);
         }else {
-            logger.info(String.format("MQError in reflection call, method: %s object: %s error: %s", method.getClass().getCanonicalName(), object.getClass().getCanonicalName(), mqErrorException.getMessage()),mqErrorException);
+            logger.debug(String.format("MQError in reflection call, method: %s object: %s error: %s", method.getClass().getCanonicalName(), object.getClass().getCanonicalName(), mqErrorException.getMessage()),mqErrorException);
         }
     }
 }

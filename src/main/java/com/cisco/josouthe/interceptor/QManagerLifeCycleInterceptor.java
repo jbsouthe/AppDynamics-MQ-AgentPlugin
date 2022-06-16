@@ -37,12 +37,12 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
     public QManagerLifeCycleInterceptor() {
         super();
         initializeAuthenticationConfig( new File( this.getAgentPluginDirectory(), AUTHENTICATION_CONFIG_FILE), authentications );
-        getLogger().info("Initialized MQ Monitor on Agent");
+        getLogger().debug("Initialized MQ Monitor on Agent");
     }
 
     private void initializeAuthenticationConfig(File configFile, ConcurrentHashMap<String, AuthenticationOverrideInfo> authenticationsHashMap) {
         if( configFile == null || !configFile.exists() ) {
-            getLogger().info(String.format("Authentication Config file does not exist, to override MQ users to monitor with, please create the file: %s", String.valueOf(configFile) ) );
+            getLogger().debug(String.format("Authentication Config file does not exist, to override MQ users to monitor with, please create the file: %s", String.valueOf(configFile) ) );
         }
         try {
             InputStream inputStream = new FileInputStream(configFile);
@@ -50,12 +50,12 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
             JSONArray array = new JSONArray(tokener);
             for( int i=0; i< array.length(); i++ ){
                 AuthenticationOverrideInfo authenticationOverrideInfo = new AuthenticationOverrideInfo(array.getJSONObject(i));
-                getLogger().info(String.format("Initializing Authentication Override: %s", authenticationOverrideInfo));
+                getLogger().debug(String.format("Initializing Authentication Override: %s", authenticationOverrideInfo));
                 if( authenticationOverrideInfo.isDefault() ) {
                     if( defaultAuthenticationOverrideInfo == null ) {
                         defaultAuthenticationOverrideInfo = authenticationOverrideInfo;
                     } else {
-                        getLogger().warn(String.format("Default authentication override config already set, looks to be set more than once, please update the config file '%s' to only have one default, we are ignoring the others", configFile.getAbsolutePath()));
+                        getLogger().info(String.format("Default authentication override config already set, looks to be set more than once, please update the config file '%s' to only have one default, we are ignoring the others", configFile.getAbsolutePath()));
                     }
                 } else {
                     authenticationsHashMap.put(authenticationOverrideInfo.getKey(), authenticationOverrideInfo);
@@ -71,10 +71,10 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
         getLogger().debug(String.format("onMethodBegin called for %s.%s( %s ) object: %s",className, methodName, printParameters(params), String.valueOf(objectIntercepted)));
         /*
         if( className.equals(MQQUEUEMANAGER) && methodName.equals("disconnect") && scheduler != null ) { //we want to remove this queue manager before the disconnect runs to be safe
-            getLogger().info("A com.ibm.mq.MQQueueManager is disconnecting, we are running, will attempt to remove it from the scheduler for monitoring");
+            getLogger().debug("A com.ibm.mq.MQQueueManager is disconnecting, we are running, will attempt to remove it from the scheduler for monitoring");
             queueManagerNameMap.remove( queueManagerObjectMap.get(objectIntercepted).getQueueManagerName() );
             MQMonitorBase mqMonitor = queueManagerObjectMap.remove(objectIntercepted);
-            getLogger().info("Removed "+ String.valueOf(mqMonitor) );
+            getLogger().debug("Removed "+ String.valueOf(mqMonitor) );
             return null;
         }
          */
@@ -87,9 +87,9 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                     jmsConnectionFactoryWrapper.removeContext(context);
                 /*if (jmsConnectionFactoryWrapper.getContextSet().isEmpty()) {
                     connectionFactoryObjectMap.remove(jmsConnectionFactoryWrapper.getObject());
-                    getLogger().info("Removed connection factory from map");
+                    getLogger().debug("Removed connection factory from map");
                 }*/
-                getLogger().info(String.format("Removed context from connectionFactoryMap, size now %d, contextMap size now %d", connectionFactoryHostMap.size(), contextMap.size()));
+                getLogger().debug(String.format("Removed context from connectionFactoryMap, size now %d, contextMap size now %d", connectionFactoryHostMap.size(), contextMap.size()));
             }
         }
         return null;
@@ -125,10 +125,10 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 BaseJMSMonitor jmsMonitor = monitors.get(key);
                 if( jmsMonitor != null ) {
                     jmsMonitor.addQueue(queueName);
-                    getLogger().info(String.format("Added Queue '%s' to Monitor for '%s'", queueName, monitors.get(key).toString()));
+                    getLogger().debug(String.format("Added Queue '%s' to Monitor for '%s'", queueName, monitors.get(key).toString()));
                 }
             } else {
-                getLogger().info(String.format("Connection not found for this object: %s", context.getConnectionName()));
+                getLogger().debug(String.format("Connection not found for this object: %s", context.getConnectionName()));
             }
 
         }
@@ -139,7 +139,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 connectionFactoryHostMap.put(connectionFactoryWrapper.getHostPortString(), connectionFactoryWrapper);
             }
             connectionFactoryHostMap.put(connectionFactoryWrapper.getHostPortString(), connectionFactoryWrapper);
-            getLogger().info(String.format("Connection Factory Intercepted for host: %s channel: %s app: %s qmgr: %s"
+            getLogger().debug(String.format("Connection Factory Intercepted for host: %s channel: %s app: %s qmgr: %s"
                     ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_HOST_NAME")
                     ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_CHANNEL")
                     ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_APPNAME")
@@ -150,7 +150,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
             }
 
             JmsContextWrapper context = contextMap.get(returnVal.toString());
-            getLogger().info(String.format("JMS Provider Name: '%s'",context.getJMSProviderName()));
+            getLogger().debug(String.format("JMS Provider Name: '%s'",context.getJMSProviderName()));
             switch (context.getJMSProviderName()) {
                 case "IBM MQ JMS Provider": {
                     String key = String.format("%s:%s", context.getJMSProviderName(), connectionFactoryWrapper.getHostPortString());
@@ -162,7 +162,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                     }
                     break;
                 }
-                default: getLogger().info(String.format("Ignoring this JMS Provider, because it is not currently supported. name: '%s'",context.getJMSProviderName()));
+                default: getLogger().debug(String.format("Ignoring this JMS Provider, because it is not currently supported. name: '%s'",context.getJMSProviderName()));
             }
             initializeScheduler();
             connectionFactoryWrapper.addContext(context);
@@ -175,7 +175,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 connectionFactoryObjectMap.put(returnVal,new JmsConnectionFactoryWrapper(this, returnVal));
             }
             JmsConnectionFactoryWrapper connectionFactoryWrapper = connectionFactoryObjectMap.get(returnVal);
-            getLogger().info(String.format("Connection Factory Intercepted for host: %s channel: %s app: %s qmgr: %s"
+            getLogger().debug(String.format("Connection Factory Intercepted for host: %s channel: %s app: %s qmgr: %s"
                     ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_HOST_NAME") //"XMSC_WMQ_PORT"
                     ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_CHANNEL")
                     ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_APPNAME")
@@ -191,7 +191,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
         if( scheduler != null ) return;
         scheduler = Scheduler.getInstance(30000, monitors);
         scheduler.start();
-        getLogger().info("Initialized Scheduler to monitor MQ");
+        getLogger().debug("Initialized Scheduler to monitor MQ");
 
     }
 

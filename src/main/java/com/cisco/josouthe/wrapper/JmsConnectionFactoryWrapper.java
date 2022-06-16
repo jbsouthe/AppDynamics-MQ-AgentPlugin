@@ -73,7 +73,7 @@ public class JmsConnectionFactoryWrapper extends BaseWrapper{
             if( value != null ) {
                 hashtable.put(propertyName, value);
             }
-            this.interceptor.getLogger().info(String.format("Property: %s=%s",propertyName,value));
+            this.interceptor.getLogger().debug(String.format("Property: %s=%s",propertyName,value));
         }
         return hashtable;
     }

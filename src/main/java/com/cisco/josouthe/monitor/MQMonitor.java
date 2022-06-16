@@ -32,18 +32,18 @@ public class MQMonitor extends BaseJMSMonitor {
         try {
             agent = new PCFMessageAgentWrapper(aGenericInterceptor, mqQueueManager );
         } catch (UserNotAuthorizedException e) {
-            logger.info(String.format("Error creating PCFMessageAgent, %s", e.toString()));
+            logger.debug(String.format("Error creating PCFMessageAgent, %s", e.toString()));
         }
         /*
         try {
             this.mqQueueManager = new MQQueueManager(connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), connectionFactoryWrapper.getPropertyHashTable());
-            logger.info("Initialized IBM MQ Queue Manager for monitoring");
+            logger.debug("Initialized IBM MQ Queue Manager for monitoring");
         } catch (MQException mqException) {
-            logger.info(String.format("Error initializing queue manager for %s Exception: %s",connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), mqException.toString()),mqException);
+            logger.debug(String.format("Error initializing queue manager for %s Exception: %s",connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), mqException.toString()),mqException);
             useReflectionInterfaces=true;
         }
         if( useReflectionInterfaces ) { //we already have the MQ classes loaded in the parent classloader, so the files we brought can't be used since they won't be found until after the loaded ones, causing an exception
-            logger.info(String.format("Attempting to initialize reflective class interface for IBM MQ Queue Manager for monitoring"));
+            logger.debug(String.format("Attempting to initialize reflective class interface for IBM MQ Queue Manager for monitoring"));
             this.interceptedClassLoader = connectionFactoryWrapper.getObject().getClass().getClassLoader();
             try{
                 Class<?> clazz = interceptedClassLoader.loadClass("com.ibm.mq.MQQueueManager");
@@ -51,9 +51,9 @@ public class MQMonitor extends BaseJMSMonitor {
                 Hashtable env = connectionFactoryWrapper.getPropertyHashTable("XMSC_WMQ_HOST_NAME", "XMSC_WMQ_PORT", "XMSC_WMQ_CHANNEL", "XMSC_USERID", "XMSC_PASSWORD");
                 env.put("XMSC_WMQ_CONNECTION_MODE", WMQConstants.WMQ_CM_CLIENT );
                 this.mqQueueManager = (MQQueueManager) constructor.newInstance(connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), env);
-                logger.info("Initialized IBM MQ Queue Manager for monitoring, with reflection");
+                logger.debug("Initialized IBM MQ Queue Manager for monitoring, with reflection");
             } catch (Exception exception) {
-                logger.info(String.format("Error initializing reflective queue manager for %s Exception: %s",connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), exception.toString()),exception);
+                logger.debug(String.format("Error initializing reflective queue manager for %s Exception: %s",connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"), exception.toString()),exception);
             }
         }
          */
@@ -67,23 +67,23 @@ public class MQMonitor extends BaseJMSMonitor {
 
     @Override
     public void run() {
-        logger.info(String.format("IBM MQ Monitor run method called for %s", connectionFactoryWrapper.toString()));
+        logger.debug(String.format("IBM MQ Monitor run method called for %s", connectionFactoryWrapper.toString()));
         Map<Integer, Integer[]> params = new HashMap<>();
         params.put( MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_Q_MGR_STATUS_ATTRS"),
                 new Integer[] { MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQIACF_ALL") });
         Map<String,Object> metricMap = agent.getMetrics( MQConstants.getIntFromConstant("com.ibm.mq.constants.CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS"), params);
 
         if( queues.isEmpty() ) queues.add("queue:///DEV.QUEUE.1"); //for testing
-        logger.info(String.format("Queue names: %s", queues.toString()));
+        logger.debug(String.format("Queue names: %s", queues.toString()));
         for( String qName : queues ) {
             try {
                 String shortQueueName = getQueueName(qName);
                 MQQueueWrapper mqQueueWrapper = mqQueueManager.accessQueue(shortQueueName, 8226);
-                logger.info(String.format("MQQueue destQueue = qMgr.accessQueue(qName, openOptions);"));
+                logger.debug(String.format("MQQueue destQueue = qMgr.accessQueue(qName, openOptions);"));
                 int depthCurrent = mqQueueWrapper.getCurrentDepth();
-                logger.info(String.format("int %d = destQueue.getCurrentDepth();", depthCurrent));
+                logger.debug(String.format("int %d = destQueue.getCurrentDepth();", depthCurrent));
                 int depthMax = mqQueueWrapper.getMaximumDepth();
-                logger.info(String.format("int %d = destQueue.getMaximumDepth();", depthMax));
+                logger.debug(String.format("int %d = destQueue.getMaximumDepth();", depthMax));
                 mqQueueWrapper.close();
 
                 reportMetric(String.format("%s|%s|%s|current depth", this.providerName, mqQueueManager.getName(), shortQueueName), depthCurrent, "OBSERVATION", "AVERAGE", "COLLECTIVE");
@@ -100,7 +100,7 @@ public class MQMonitor extends BaseJMSMonitor {
                 MQEnvironment.userID = connectionFactoryWrapper.getStringProperty("XMSC_USERID");
                 MQEnvironment.password = connectionFactoryWrapper.getStringProperty("XMSC_PASSWORD");
 
-                logger.info(String.format("about to grab a queue '%s' from the queue manager: %s", qName, mqQueueManager));
+                logger.debug(String.format("about to grab a queue '%s' from the queue manager: %s", qName, mqQueueManager));
                 MQQueueManager qMgr = new MQQueueManager(connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER")); //, connectionFactoryWrapper.getPropertyHashTable());
                  //no class def found exception because class loader is seeing the app classes and not our sdk plugin packaged version
                     [11.517s][info   ][class,load] com.ibm.mq.jmqi.remote.api.RemoteFAP source: file:/Users/josouthe/.m2/repository/com/ibm/mq/com.ibm.mq.allclient/9.2.5.0/com.ibm.mq.allclient-9.2.5.0.jar
@@ -112,42 +112,42 @@ public class MQMonitor extends BaseJMSMonitor {
                     Caused by: com.ibm.mq.jmqi.JmqiException: CC=2;RC=2195;AMQ9546: Error return code received. [1=java.lang.NoSuchMethodException[com.ibm.mq.jmqi.remote.api.RemoteFAP.<init>(com.ibm.mq.jmqi.JmqiEnvironment,int)],3=Class.getConstructor0]
                     Caused by: java.lang.NoSuchMethodException: com.ibm.mq.jmqi.remote.api.RemoteFAP.<init>(com.ibm.mq.jmqi.JmqiEnvironment,int)
 
-                logger.info(String.format("about to grab a queue '%s' from the queue manager: %s", qName, mqQueueManager));
+                logger.debug(String.format("about to grab a queue '%s' from the queue manager: %s", qName, mqQueueManager));
                 MQQueueManager qMgr = new MQQueueManager(
                         connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER"),
                         connectionFactoryWrapper.getPropertyHashTable("XMSC_WMQ_HOST_NAME", "XMSC_WMQ_PORT", "XMSC_WMQ_CHANNEL", "XMSC_USERID", "XMSC_PASSWORD")
                         );
 
-                logger.info(String.format("MQQueueManager qMgr = new MQQueueManager(connectionFactoryWrapper.getStringProperty(\"XMSC_WMQ_QUEUE_MANAGER\"), connectionFactoryWrapper.getPropertyHashTable());", qMgr));
+                logger.debug(String.format("MQQueueManager qMgr = new MQQueueManager(connectionFactoryWrapper.getStringProperty(\"XMSC_WMQ_QUEUE_MANAGER\"), connectionFactoryWrapper.getPropertyHashTable());", qMgr));
                 int openOptions = CMQC.MQOO_INQUIRE + CMQC.MQOO_FAIL_IF_QUIESCING + CMQC.MQOO_INPUT_SHARED;
-                logger.info(String.format("int %d = CMQC.MQOO_INQUIRE + CMQC.MQOO_FAIL_IF_QUIESCING + CMQC.MQOO_INPUT_SHARED;",openOptions));
+                logger.debug(String.format("int %d = CMQC.MQOO_INQUIRE + CMQC.MQOO_FAIL_IF_QUIESCING + CMQC.MQOO_INPUT_SHARED;",openOptions));
                 MQQueue destQueue = qMgr.accessQueue(qName, openOptions);
-                logger.info(String.format("MQQueue destQueue = qMgr.accessQueue(qName, openOptions);"));
+                logger.debug(String.format("MQQueue destQueue = qMgr.accessQueue(qName, openOptions);"));
                 int depth = destQueue.getCurrentDepth();
-                logger.info(String.format("int %d = destQueue.getCurrentDepth();", depth));
+                logger.debug(String.format("int %d = destQueue.getCurrentDepth();", depth));
                 destQueue.close();
-                logger.info(String.format("destQueue.close();"));
+                logger.debug(String.format("destQueue.close();"));
                 qMgr.disconnect();
-                logger.info(String.format("qMgr.disconnect();"));
+                logger.debug(String.format("qMgr.disconnect();"));
 
                 PCFMessageAgent pcfMessageAgent = new PCFMessageAgent(mqQueueManager);
                 PCFMessage request = new PCFMessage(CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS);
                 request.addParameter(CMQCFC.MQIACF_Q_MGR_STATUS_ATTRS, new int[] { CMQCFC.MQIACF_ALL });
                 PCFMessage[] responses = pcfMessageAgent.send(request);
                 if (responses == null || responses.length <= 0) {
-                    logger.info("Unexpected Error while PCFMessage.send(), response is either null or empty");
+                    logger.debug("Unexpected Error while PCFMessage.send(), response is either null or empty");
                     continue;
                 } else {
-                    logger.info(String.format("response[0] toString '%s'", String.valueOf(responses[0])));
+                    logger.debug(String.format("response[0] toString '%s'", String.valueOf(responses[0])));
                 }
                 //MQQueue mqQueue = mqQueueManager.accessQueue(qName, CMQC.MQOO_INQUIRE + CMQC.MQOO_FAIL_IF_QUIESCING + CMQC.MQOO_INPUT_SHARED);
-                //logger.info(String.format("Queue Name: %s current Queue Depth: %d", qName, mqQueue.getCurrentDepth()));
+                //logger.debug(String.format("Queue Name: %s current Queue Depth: %d", qName, mqQueue.getCurrentDepth()));
                 //mqQueue.close();
 
                  */
             } catch (Exception mqException) {
                 Throwable sourceException = ExceptionUtility.getRootCause(mqException);
-                logger.info(String.format("Error getting queue statistics from %s Exception: %s",qName, sourceException.toString()),sourceException);
+                logger.debug(String.format("Error getting queue statistics from %s Exception: %s",qName, sourceException.toString()),sourceException);
             }
         }
     }
@@ -158,7 +158,7 @@ public class MQMonitor extends BaseJMSMonitor {
         try {
             name = new URI(uri).getPath();
         } catch (Exception exception) {
-            logger.info(String.format("Error attempting to get path from '%s'", uri));
+            logger.debug(String.format("Error attempting to get path from '%s'", uri));
         }
         return (name.startsWith("/") ? name.substring(1) : name);
     }

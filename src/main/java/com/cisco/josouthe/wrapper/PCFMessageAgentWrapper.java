@@ -22,16 +22,16 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
         try{
             this.object = constructor.execute( mqQueueManager.getObject().getClass().getClassLoader(), null, new Object[] { mqQueueManager.getObject() } );
             setWaitInterval(5);
-            logger.info("Initialized IBM MQ PCFMessageAgent for monitoring, with reflection");
+            logger.debug("Initialized IBM MQ PCFMessageAgent for monitoring, with reflection");
         } catch (Exception exception) {
             if( ExceptionUtility.exceptionMatches(exception, "MQJE001: Completion Code '2', Reason '2035'.") )
                     throw new UserNotAuthorizedException( mqQueueManager, exception.getCause().getCause().getMessage());
             Throwable sourceException = ExceptionUtility.getRootCause(exception);
             MQErrorException mqErrorException = ExceptionUtility.processException(exception);
             if( mqErrorException == null ) {
-                logger.info(String.format("Error initializing reflective PCFMessageAgent Exception: %s", sourceException.toString()),sourceException);
+                logger.debug(String.format("Error initializing reflective PCFMessageAgent Exception: %s", sourceException.toString()),sourceException);
             }else {
-                logger.info(String.format("Error initializing reflective PCFMessageAgent Exception: %s", mqErrorException.getMessage()),mqErrorException);
+                logger.debug(String.format("Error initializing reflective PCFMessageAgent Exception: %s", mqErrorException.getMessage()),mqErrorException);
             }
         }
     }
@@ -45,17 +45,16 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
     }
 
     public Map<String,Object> getMetrics(Integer command, Map<Integer, Integer[]> parameterMap) {
-        logger.info(String.format("getMetrics( %d, %s) this wrapped object: %s", command, parameterMap, String.valueOf(this.object)));
+        logger.debug(String.format("getMetrics( %d, %s) this wrapped object: %s", command, parameterMap, String.valueOf(this.object)));
         Map<String,Object> metrics = new HashMap<>();
         PCFMessageWrapper request = new PCFMessageWrapper(this.interceptor, this.object, command); //CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS
         if( parameterMap != null && parameterMap.size() > 0 )
             for( Integer parameter : parameterMap.keySet() )
                 request.addParameter(parameter, parameterMap.get(parameter) ); //CMQCFC.MQIACF_Q_MGR_STATUS_ATTRS, new int[] { CMQCFC.MQIACF_ALL }
-        PCFMessageWrapper[] responses = send(request.getObject());
-        if( responses == null || responses.length == 0 ) return metrics;
+        List<PCFMessageWrapper> responses = send(request.getObject());
         for( PCFMessageWrapper response : responses ) {
             metrics.put( response.toString(), response);
-            logger.info(String.format("Queue %s response %s", response.getQueueName(), response.toString()));
+            logger.debug(String.format("Response %s", response.toString()));
         }
         return metrics;
     }
@@ -71,14 +70,14 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
             Throwable rootException = ExceptionUtility.getRootCause(e);
             MQErrorException mqErrorException = ExceptionUtility.processException(e);
             if( mqErrorException == null ) {
-                logger.info(String.format("Error in PCFMessageAgent.setWaitInterval( %d, %d ), message: %s", wait, expiry, rootException.getMessage()));
+                logger.debug(String.format("Error in PCFMessageAgent.setWaitInterval( %d, %d ), message: %s", wait, expiry, rootException.getMessage()));
             }else {
-                logger.info(String.format("Error in PCFMessageAgent.setWaitInterval( %d, %d ), message: %s", wait, expiry, mqErrorException.getMessage()));
+                logger.debug(String.format("Error in PCFMessageAgent.setWaitInterval( %d, %d ), message: %s", wait, expiry, mqErrorException.getMessage()));
             }
         }
     }
 
-    public PCFMessageWrapper[] send( Object request ) {
+    public List<PCFMessageWrapper> send( Object request ) {
         List<PCFMessageWrapper> responses = new ArrayList<>();
         long startTime = System.currentTimeMillis();
         Object[] responseObjects = null;
@@ -88,18 +87,20 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
             Throwable rootException = ExceptionUtility.getRootCause(e);
             MQErrorException mqErrorException = ExceptionUtility.processException(e);
             if( mqErrorException == null ) {
-                logger.info(String.format("Error in PCFMessageAgent.send( '%s' ), message: %s", request, rootException.getMessage()));
+                logger.debug(String.format("Error in PCFMessageAgent.send( '%s' ), message: %s", request, rootException.getMessage()));
             }else {
-                logger.info(String.format("Error in PCFMessageAgent.send( '%s' ), message: %s", request, mqErrorException.getMessage()));
+                logger.debug(String.format("Error in PCFMessageAgent.send( '%s' ), message: %s", request, mqErrorException.getMessage()));
             }
         }
         long durationTime = System.currentTimeMillis() - startTime;
+        StringBuffer responseStrings = new StringBuffer();
         if( responseObjects != null )
-            for( Object object : responseObjects ) {
-                responses.add(new PCFMessageWrapper(this.interceptor, object, this.getObject()));
+            for( Object responseObject : responseObjects ) {
+                responses.add(new PCFMessageWrapper(this.interceptor, responseObject, this.getObject()));
+                responseStrings.append(responseObject.toString());
             }
-        logger.info(String.format("PCFMessageAgent.send( %s ) took %d milliseconds to return %d responses", request, durationTime, responses.size()));
-        return responses.toArray(new PCFMessageWrapper[0]);
+        logger.debug(String.format("PCFMessageAgent.send( %s ) took %d milliseconds to return %d responses: '%s'", request, durationTime, responses.size(), responseStrings));
+        return responses;
     }
 
 }

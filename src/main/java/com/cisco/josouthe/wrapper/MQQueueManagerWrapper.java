@@ -49,13 +49,13 @@ public class MQQueueManagerWrapper extends BaseWrapper{
     }
 
     public MQQueueWrapper accessQueue( String name ) {
-        logger.info(String.format("accessQueue('%s')", name));
+        logger.debug(String.format("accessQueue('%s')", name));
         Object mqQueueObject = getReflectiveObject(this.object, accessQueue, name);
         return new MQQueueWrapper(this.interceptor, mqQueueObject, this.object, name, null);
     }
 
     public MQQueueWrapper accessQueue(String name, int options) {
-        logger.info(String.format("accessQueue('%s', %d)", name, options));
+        logger.debug(String.format("accessQueue('%s', %d)", name, options));
         Object mqQueueObject = getReflectiveObject(this.object, accessQueueWithOptions, name, options);
         return new MQQueueWrapper(this.interceptor, mqQueueObject, this.object, name, options);
     }
@@ -69,12 +69,12 @@ public class MQQueueManagerWrapper extends BaseWrapper{
             connectionProperties.put("channel", channel);
             connectionProperties.put("userID", userID);
             connectionProperties.put("password", password);
-            logger.info(String.format("jms queue '%s' connection properties: %s", queue, connectionProperties));
+            logger.debug(String.format("jms queue '%s' connection properties: %s", queue, connectionProperties));
             this.object = constructor.execute( classLoader, null, new Object[] { queue, connectionProperties });
-            logger.info("Initialized IBM MQ Queue Manager for monitoring, with reflection");
+            logger.debug("Initialized IBM MQ Queue Manager for monitoring, with reflection");
         } catch (Exception exception) {
             Throwable rootCause = ExceptionUtility.getRootCause(exception);
-            logger.info(String.format("Error initializing reflective queue manager for %s Exception: %s",queue, rootCause.toString()),rootCause);
+            logger.debug(String.format("Error initializing reflective queue manager for %s Exception: %s",queue, rootCause.toString()),rootCause);
         }
     }
 
