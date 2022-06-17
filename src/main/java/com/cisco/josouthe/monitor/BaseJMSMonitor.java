@@ -8,10 +8,10 @@ import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.cisco.josouthe.metric.Metric;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.*;
 
 public abstract class BaseJMSMonitor implements Comparable{
     protected JmsConnectionFactoryWrapper connectionFactoryWrapper;
@@ -22,6 +22,7 @@ public abstract class BaseJMSMonitor implements Comparable{
     private Date creationTime;
     private long lastRunTimestamp;
     private String metricPrefix = "Custom Metrics|";
+    private SimpleDateFormat mqDateFormatter;
 
     public BaseJMSMonitor( AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper connectionFactoryWrapper, String key) {
         this.connectionFactoryWrapper=connectionFactoryWrapper;
@@ -29,6 +30,8 @@ public abstract class BaseJMSMonitor implements Comparable{
         this.key=key;
         this.creationTime= new Date();
         this.logger = interceptor.getLogger();
+        mqDateFormatter = new SimpleDateFormat("yyyy-M-d H.m.s");
+        mqDateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     public abstract void run();
@@ -81,9 +84,8 @@ public abstract class BaseJMSMonitor implements Comparable{
                 "clusterRollupType": "Values allowed: [INDIVIDUAL, COLLECTIVE]" }
          */
     protected void reportMetric(String metricName, long metricValue, String aggregationType, String timeRollupType, String clusterRollupType) {
-        interceptor.getLogger().debug("Begin reportMetric name: " + metricPrefix + metricName + " = " + metricValue + " aggregation type: " + aggregationType + " time rollup type: " + timeRollupType + " cluster rollup type: " + clusterRollupType);
+        interceptor.getLogger().debug("reportMetric name: " + metricPrefix + metricName + " = " + metricValue + " aggregation type: " + aggregationType + " time rollup type: " + timeRollupType + " cluster rollup type: " + clusterRollupType);
         AppdynamicsAgent.getMetricPublisher().reportMetric(metricPrefix + metricName, metricValue, aggregationType, timeRollupType, clusterRollupType);
-        interceptor.getLogger().debug("Finish reportMetric name: " + metricPrefix + metricName + " = " + metricValue + " aggregation type: " + aggregationType + " time rollup type: " + timeRollupType + " cluster rollup type: " + clusterRollupType);
     }
 
     protected void reportMetric(Metric metric, long metricValue) {
@@ -96,4 +98,13 @@ public abstract class BaseJMSMonitor implements Comparable{
             return 0;
         return -1;
     }
+
+    public long getTimeStamp( String dateString, String timeString ) throws ParseException {
+        return mqDateFormatter.parse(String.format("%s %s Z",dateString, timeString)).getTime();
+    }
+
+    public long getRelativeTime(long timestamp) {
+        return Instant.now().toEpochMilli() - timestamp;
+    }
+
 }
