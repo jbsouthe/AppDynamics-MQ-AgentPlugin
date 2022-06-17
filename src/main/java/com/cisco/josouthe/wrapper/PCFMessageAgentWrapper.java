@@ -8,9 +8,7 @@ import com.cisco.josouthe.util.ExceptionUtility;
 import com.cisco.josouthe.exception.UserNotAuthorizedException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 public class PCFMessageAgentWrapper extends BaseWrapper{
@@ -44,21 +42,6 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
                 .build();
     }
 
-    public Map<String,Object> getMetrics(Integer command, Map<Integer, Integer[]> parameterMap) {
-        logger.debug(String.format("getMetrics( %d, %s) this wrapped object: %s", command, parameterMap, String.valueOf(this.object)));
-        Map<String,Object> metrics = new HashMap<>();
-        PCFMessageWrapper request = new PCFMessageWrapper(this.interceptor, this.object, command); //CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS
-        if( parameterMap != null && parameterMap.size() > 0 )
-            for( Integer parameter : parameterMap.keySet() )
-                request.addParameter(parameter, parameterMap.get(parameter) ); //CMQCFC.MQIACF_Q_MGR_STATUS_ATTRS, new int[] { CMQCFC.MQIACF_ALL }
-        List<PCFMessageWrapper> responses = send(request.getObject());
-        for( PCFMessageWrapper response : responses ) {
-            metrics.put( response.toString(), response);
-            logger.debug(String.format("Response %s", response.toString()));
-        }
-        return metrics;
-    }
-
     public void setWaitInterval( int wait ) {
         setWaitInterval(wait, wait);
     }
@@ -77,6 +60,10 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
         }
     }
 
+    public List<PCFMessageWrapper> send( PCFMessageWrapper request ) {
+        return send( request.getObject() );
+    }
+
     public List<PCFMessageWrapper> send( Object request ) {
         List<PCFMessageWrapper> responses = new ArrayList<>();
         long startTime = System.currentTimeMillis();
@@ -91,6 +78,7 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
             }else {
                 logger.debug(String.format("Error in PCFMessageAgent.send( '%s' ), message: %s", request, mqErrorException.getMessage()));
             }
+            return responses;
         }
         long durationTime = System.currentTimeMillis() - startTime;
         StringBuffer responseStrings = new StringBuffer();
