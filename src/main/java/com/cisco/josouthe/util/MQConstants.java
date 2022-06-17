@@ -28,15 +28,15 @@ In case we need to generate this again, here is the perl to do it from the heade
  22         #    print "$context.put($code, \"$reason\");\n";
  23         #}
  24     } else {
- 25          print "//no match: '$_'\n";
+ 25          print "//no match: '$_'\n"; //the first part of the output shows all the things we didn't get
  26     }
  27 }
  28
- 29 for $groupName ( keys %groups ) {
+ 29 for $groupName ( keys %groups ) { //second part is the attributes defined for the class
  30     print "\tprivate static Map<Integer, String> ibm${groupName}Map; \/\/$definitions{$groupName} \n"
  31 }
  32
- 33 for $key ( keys %groups ) {
+ 33 for $key ( keys %groups ) { //third section creates the definitions and map loading for the initializeConstants() method
  34     print "if( ibm${key}Map == null ) {\n\tibm${key}Map = new HashMap<>();\n";
  35     for $line ( @{$groups{$key}} ) {
  36         print "\t$line";
@@ -44,7 +44,7 @@ In case we need to generate this again, here is the perl to do it from the heade
  38     print "}\n";
  39 }
  40
- 41 for $groupName ( keys %groups ) {
+ 41 for $groupName ( keys %groups ) { //fourth section generates the access methods to use for mapping
  42     print "\tpublic static String get${groupName}String(Integer num) { initializeConstants(); return ibm${groupName}Map.get(num); }\n";
  43 }
 
@@ -168,15 +168,24 @@ public class MQConstants { //may god have mercy on me
     private static Map<Integer, String> ibmMQPSMap; //Pub/Sub Status
     private static Map<Integer, String> ibmMQSECSWMap; //Security Switch States
     private static Map<Integer, String> ibmMQUSAGEMap; //Data Set Usage Values
+    private static Map<String, Integer> ibmCommandMap;
 
-    public static Integer getIntFromConstant(String classAttributeName ) {
+    public static Integer getIntFromConstant(String name ) {
         initializeConstants();
-        Integer i = ibmConstantAccessorsMap.get(classAttributeName);
-        if( i == null ) i = ibmConstantAccessorsMap.get(String.format("CMQCFC.%s",classAttributeName));
+        Integer i = null;
+        if( name.startsWith("CMQCFC.") ) i = ibmConstantAccessorsMap.get(name);
+        if( name.startsWith("CMQC.") ) i = ibmCommandMap.get(name);
+        if( i == null ) i = ibmConstantAccessorsMap.get(String.format("CMQCFC.%s",name));
         return i;
     }
 
     private static void initializeConstants() {
+        init_1();
+        init_2();
+        init_theLast();
+    }
+
+    private static void init_1() {
         if (ibmConstantAccessorsMap == null) {
             ibmConstantAccessorsMap = new HashMap<>();
             ibmConstantAccessorsMap.put("CMQCFC.MQ_ARCHIVE_PFX_LENGTH", 36);
@@ -2413,6 +2422,9 @@ public class MQConstants { //may god have mercy on me
             ibmConstantAccessorsMap.put("CMQCFC.MQEPH_NONE", 0);
             ibmConstantAccessorsMap.put("CMQCFC.MQEPH_CCSID_EMBEDDED", 1);
         }
+    }
+
+    private static void init_2() {
         if( ibmMQEXTMap == null ) {
             ibmMQEXTMap = new HashMap<>();
             ibmMQEXTMap.put( 0, "MQEXT_ALL");
@@ -4794,6 +4806,13 @@ public class MQConstants { //may god have mercy on me
             ibmMQCHSMap.put( 9, "MQCHS_DISCONNECTED");
             ibmMQCHSMap.put( 13, "MQCHS_INITIALIZING");
             ibmMQCHSMap.put( 14, "MQCHS_SWITCHING");
+        }
+    }
+
+    private static void init_theLast() {
+        if( ibmCommandMap == null ) {
+            ibmCommandMap = new HashMap<>();
+            ibmCommandMap.put("CMQC.MQCA_Q_NAME", 2016 );
         }
     }
 
