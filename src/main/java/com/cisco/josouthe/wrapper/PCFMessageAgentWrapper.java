@@ -87,7 +87,7 @@ public class PCFMessageAgentWrapper extends BaseWrapper{
                 responses.add(new PCFMessageWrapper(this.interceptor, responseObject, this.getObject()));
                 responseStrings.append(responseObject.toString());
             }
-        logger.debug(String.format("PCFMessageAgent.send( %s ) took %d milliseconds to return %d responses: '%s'", request, durationTime, responses.size(), responseStrings));
+        logger.trace(String.format("PCFMessageAgent.send( %s ) took %d milliseconds to return %d responses: '%s'", request, durationTime, responses.size(), responseStrings));
         return responses;
     }
 

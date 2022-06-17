@@ -3,6 +3,7 @@ package com.cisco.josouthe.wrapper;
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
+import com.cisco.josouthe.util.MQConstants;
 
 import java.util.Arrays;
 
@@ -22,7 +23,7 @@ public class PCFMessageWrapper extends BaseWrapper{
     public PCFMessageWrapper(ASDKPlugin aGenericInterceptor, Object message, Object parentObject ) {
         super(aGenericInterceptor, message, parentObject);
         initMethods();
-        logger.debug(String.format("Initialized IBM MQ PCFMessage from object: %s", this.toString()));
+        logger.debug(String.format("Initialized IBM MQ PCFMessage from object: %s", message.toString()));
     }
 
     protected void initMethods() {
@@ -46,8 +47,16 @@ public class PCFMessageWrapper extends BaseWrapper{
         getReflectiveObject(this.object, addParameterString, parameter, value);
     }
 
+    public Integer getIntParameterValue( String parameterName ) {
+        return getIntParameterValue(MQConstants.getIntFromConstant(parameterName));
+    }
+
     public Integer getIntParameterValue( int parameter ) {
         return (Integer) getReflectiveObject(this.object, getIntParameterValue, parameter);
+    }
+
+    public String getStringParameterValue( String parameterName ) {
+        return getStringParameterValue( MQConstants.getIntFromConstant(parameterName));
     }
 
     public String getStringParameterValue( int parameter ) {
