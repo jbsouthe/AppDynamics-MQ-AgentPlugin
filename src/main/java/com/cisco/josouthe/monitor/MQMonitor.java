@@ -43,12 +43,35 @@ public class MQMonitor extends BaseJMSMonitor {
         logger.debug(String.format("IBM MQ Monitor run method called for %s", connectionFactoryWrapper.toString()));
         reportQueueManagerStatus();
 
-        if( queues.isEmpty() ) queues.add("queue:///DEV.QUEUE.1"); //for testing
+        //if( queues.isEmpty() ) queues.add("queue:///DEV.QUEUE.1"); //for testing
         logger.debug(String.format("Queue names: %s", queues.toString()));
         for( String qName : queues ) {
             String shortQueueName = getQueueName(qName);
             reportQueueStatus(shortQueueName);
             reportQueueDepth(shortQueueName);
+        }
+
+        for( String channelName : channels ) {
+            reportChannelStatus( channelName );
+        }
+    }
+
+    private void reportChannelStatus( String channelName ) {
+        PCFMessageWrapper request = new PCFMessageWrapper(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS"));
+        request.addParameter(MQConstants.getIntFromConstant("CMQCFC.MQCACH_CHANNEL_NAME"), channelName);
+        List<PCFMessageWrapper> responses = agent.send(request);
+        for (PCFMessageWrapper response : responses) {
+            logger.trace(String.format("Response %s", response.toString()));
+            int bytesSent = response.getIntParameterValue("MQIACH_BYTES_SENT");
+            reportMetric(String.format("%s|%s|Channel|%s|Bytes Sent", this.providerName, mqQueueManager.getName(), channelName), bytesSent, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
+            int bytesRecv = response.getIntParameterValue("MQIACH_BYTES_RECEIVED");
+            reportMetric(String.format("%s|%s|Channel|%s|Bytes Received", this.providerName, mqQueueManager.getName(), channelName), bytesRecv, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
+            int buffersSent = response.getIntParameterValue("MQIACH_BUFFERS_SENT");
+            reportMetric(String.format("%s|%s|Channel|%s|Buffers Sent", this.providerName, mqQueueManager.getName(), channelName), buffersSent, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
+            int buffersRecv = response.getIntParameterValue("MQIACH_BUFFERS_RECEIVED");
+            reportMetric(String.format("%s|%s|Channel|%s|Buffers Received", this.providerName, mqQueueManager.getName(), channelName), buffersRecv, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
+            int status = response.getIntParameterValue("MQIACH_CHANNEL_SUBSTATE");
+            reportMetric(String.format("%s|%s|Channel|%s|Status", this.providerName, mqQueueManager.getName(), channelName), status, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
         }
     }
 

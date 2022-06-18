@@ -18,6 +18,7 @@ public abstract class BaseJMSMonitor implements Comparable{
     protected AGenericInterceptor interceptor;
     protected ISDKLogger logger;
     protected Set<String> queues = new HashSet<>();
+    protected Set<String> channels = new HashSet<>();
     private String key;
     private Date creationTime;
     private long lastRunTimestamp;
@@ -46,6 +47,7 @@ public abstract class BaseJMSMonitor implements Comparable{
     }
 
     public synchronized void addQueue( String name ) { queues.add(name); }
+    public synchronized void addChannel( String name ) { channels.add(name); }
 
     protected void collectSnapshotData(String name, Object value) {
         collectSnapshotData(AppdynamicsAgent.getTransaction(), name, value);
