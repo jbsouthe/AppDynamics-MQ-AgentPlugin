@@ -4,6 +4,7 @@ import com.appdynamics.instrumentation.sdk.Rule;
 import com.appdynamics.instrumentation.sdk.SDKClassMatchType;
 import com.appdynamics.instrumentation.sdk.SDKStringMatchType;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
+import com.cisco.josouthe.MetaData;
 import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 import com.cisco.josouthe.monitor.BaseJMSMonitor;
 import com.cisco.josouthe.monitor.MQMonitor;
@@ -36,8 +37,8 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
 
     public QManagerLifeCycleInterceptor() {
         super();
+        getLogger().info(String.format("Initialized plugin class %s version %s build date %s",getClass().getCanonicalName(), MetaData.VERSION, MetaData.BUILDTIMESTAMP));
         initializeAuthenticationConfig( new File( this.getAgentPluginDirectory(), AUTHENTICATION_CONFIG_FILE), authentications );
-        getLogger().debug("Initialized MQ Monitor on Agent");
     }
 
     private void initializeAuthenticationConfig(File configFile, ConcurrentHashMap<String, AuthenticationOverrideInfo> authenticationsHashMap) {
