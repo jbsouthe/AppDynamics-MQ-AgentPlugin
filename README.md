@@ -17,7 +17,7 @@ If the users the application is authenticating with the MQ Queue manager are not
 Here is an example of such a file:
 
     [
-        { "default": true, "userId": "mqm", "password": "", "channel": "MONITOR.SRVCONN" },
+        { "default": true, "userID": "mqm", "password": "", "channel": "MONITOR.SRVCONN" },
         { "hostname": "someHost", "port": 1414, "userID": "mqm", "password": "", "channel": "MONITOR.SRVCONN" },
         { "hostname": "someOtherHost", "port": 1414, "userID": "someOtherUser", "password": "someOtherPassword", "channel": "MONITOR.SRVCONN" }
     ]
