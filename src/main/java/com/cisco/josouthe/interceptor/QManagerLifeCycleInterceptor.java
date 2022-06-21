@@ -42,7 +42,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
 
     private void initializeAuthenticationConfig(File configFile, ConcurrentHashMap<String, AuthenticationOverrideInfo> authenticationsHashMap) {
         if( configFile == null || !configFile.exists() ) {
-            getLogger().debug(String.format("Authentication Config file does not exist, to override MQ users to monitor with, please create the file: %s", String.valueOf(configFile) ) );
+            getLogger().info(String.format("Authentication Config file does not exist, to override MQ users to monitor with, please create the file: %s", String.valueOf(configFile) ) );
         }
         try {
             InputStream inputStream = new FileInputStream(configFile);
@@ -55,13 +55,13 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                     if( defaultAuthenticationOverrideInfo == null ) {
                         defaultAuthenticationOverrideInfo = authenticationOverrideInfo;
                     } else {
-                        getLogger().info(String.format("Default authentication override config already set, looks to be set more than once, please update the config file '%s' to only have one default, we are ignoring the others", configFile.getAbsolutePath()));
+                        getLogger().warn(String.format("Default authentication override config already set, looks to be set more than once, please update the config file '%s' to only have one default, we are ignoring the others", configFile.getAbsolutePath()));
                     }
                 } else {
                     authenticationsHashMap.put(authenticationOverrideInfo.getKey(), authenticationOverrideInfo);
                 }
             }
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             getLogger().error(String.format("Error reading %s, exception: %s", configFile.getAbsolutePath(), e.toString()));
         }
     }
