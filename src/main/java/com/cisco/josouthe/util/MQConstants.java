@@ -51,6 +51,7 @@ In case we need to generate this again, here is the perl to do it from the heade
  */
 public class MQConstants { //may god have mercy on me
     private static Map<String, Integer> ibmConstantAccessorsMap;
+    private static Map<String,Integer> ibmMQCAMap; //Character Attribute Selectors
     private static Map<Integer, String> ibmMQADPCTXMap; //Authentication Adoption Context
     private static Map<Integer, String> ibmMQMATCHMap; //Match Types
     private static Map<Integer, String> ibmMQCHTABMap; //Channel Table Types
@@ -168,14 +169,13 @@ public class MQConstants { //may god have mercy on me
     private static Map<Integer, String> ibmMQPSMap; //Pub/Sub Status
     private static Map<Integer, String> ibmMQSECSWMap; //Security Switch States
     private static Map<Integer, String> ibmMQUSAGEMap; //Data Set Usage Values
-    private static Map<String, Integer> ibmCommandMap;
     private static Map<String,Integer> ibmMQIAMap; //Integer Attribute Selectors
 
     public static Integer getIntFromConstant(String name ) {
         initializeConstants();
         Integer i = null;
         if( name.startsWith("CMQCFC.") ) i = ibmConstantAccessorsMap.get(name);
-        if( name.startsWith("CMQC.") ) i = ibmCommandMap.get(name);
+        if( name.startsWith("MQCA_") ) i = getMQCAValue(name);
         if( name.startsWith("MQIA_") ) i = getMQIAValue(name);
         if( i == null ) i = ibmConstantAccessorsMap.get(String.format("CMQCFC.%s",name));
         return i;
@@ -4812,10 +4812,6 @@ public class MQConstants { //may god have mercy on me
     }
 
     private static void init_theLast() {
-        if( ibmCommandMap == null ) {
-            ibmCommandMap = new HashMap<>();
-            ibmCommandMap.put("CMQC.MQCA_Q_NAME", 2016 );
-        }
         if( ibmMQIAMap == null ) {
             ibmMQIAMap = new HashMap<>();
             ibmMQIAMap.put( "MQIA_ACCOUNTING_CONN_OVERRIDE", 136);
@@ -5054,7 +5050,134 @@ public class MQConstants { //may god have mercy on me
             ibmMQIAMap.put( "MQIA_WILDCARD_OPERATION", 216);
             ibmMQIAMap.put( "MQIA_XR_CAPABILITY", 243);
         }
-
+        if( ibmMQCAMap == null ) {
+            ibmMQCAMap = new HashMap<>();
+            ibmMQCAMap.put( "MQCA_ADMIN_TOPIC_NAME", 2105);
+            ibmMQCAMap.put( "MQCA_ALTERATION_DATE", 2027);
+            ibmMQCAMap.put( "MQCA_ALTERATION_TIME", 2028);
+            ibmMQCAMap.put( "MQCA_APPL_ID", 2001);
+            ibmMQCAMap.put( "MQCA_AUTH_INFO_CONN_NAME", 2053);
+            ibmMQCAMap.put( "MQCA_AUTH_INFO_DESC", 2046);
+            ibmMQCAMap.put( "MQCA_AUTH_INFO_NAME", 2045);
+            ibmMQCAMap.put( "MQCA_AUTH_INFO_OCSP_URL", 2109);
+            ibmMQCAMap.put( "MQCA_AUTO_REORG_CATALOG", 2091);
+            ibmMQCAMap.put( "MQCA_AUTO_REORG_START_TIME", 2090);
+            ibmMQCAMap.put( "MQCA_BACKOUT_REQ_Q_NAME", 2019);
+            ibmMQCAMap.put( "MQCA_BASE_OBJECT_NAME", 2002);
+            ibmMQCAMap.put( "MQCA_BASE_Q_NAME", 2002);
+            ibmMQCAMap.put( "MQCA_BATCH_INTERFACE_ID", 2068);
+            ibmMQCAMap.put( "MQCA_CERT_LABEL", 2121);
+            ibmMQCAMap.put( "MQCA_CF_STRUC_DESC", 2052);
+            ibmMQCAMap.put( "MQCA_CF_STRUC_NAME", 2039);
+            ibmMQCAMap.put( "MQCA_CHANNEL_AUTO_DEF_EXIT", 2026);
+            ibmMQCAMap.put( "MQCA_CHILD", 2101);
+            ibmMQCAMap.put( "MQCA_CHINIT_SERVICE_PARM", 2076);
+            ibmMQCAMap.put( "MQCA_CHLAUTH_DESC", 2118);
+            ibmMQCAMap.put( "MQCA_CICS_FILE_NAME", 2060);
+            ibmMQCAMap.put( "MQCA_CLUSTER_DATE", 2037);
+            ibmMQCAMap.put( "MQCA_CLUSTER_NAME", 2029);
+            ibmMQCAMap.put( "MQCA_CLUSTER_NAMELIST", 2030);
+            ibmMQCAMap.put( "MQCA_CLUSTER_Q_MGR_NAME", 2031);
+            ibmMQCAMap.put( "MQCA_CLUSTER_TIME", 2038);
+            ibmMQCAMap.put( "MQCA_CLUSTER_WORKLOAD_DATA", 2034);
+            ibmMQCAMap.put( "MQCA_CLUSTER_WORKLOAD_EXIT", 2033);
+            ibmMQCAMap.put( "MQCA_CLUS_CHL_NAME", 2124);
+            ibmMQCAMap.put( "MQCA_COMMAND_INPUT_Q_NAME", 2003);
+            ibmMQCAMap.put( "MQCA_COMMAND_REPLY_Q_NAME", 2067);
+            ibmMQCAMap.put( "MQCA_COMM_INFO_DESC", 2111);
+            ibmMQCAMap.put( "MQCA_COMM_INFO_NAME", 2110);
+            ibmMQCAMap.put( "MQCA_CONN_AUTH", 2125);
+            ibmMQCAMap.put( "MQCA_CREATION_DATE", 2004);
+            ibmMQCAMap.put( "MQCA_CREATION_TIME", 2005);
+            ibmMQCAMap.put( "MQCA_CUSTOM", 2119);
+            ibmMQCAMap.put( "MQCA_DEAD_LETTER_Q_NAME", 2006);
+            ibmMQCAMap.put( "MQCA_DEF_XMIT_Q_NAME", 2025);
+            ibmMQCAMap.put( "MQCA_DNS_GROUP", 2071);
+            ibmMQCAMap.put( "MQCA_ENV_DATA", 2007);
+            ibmMQCAMap.put( "MQCA_FIRST", 2001);
+            ibmMQCAMap.put( "MQCA_IGQ_USER_ID", 2041);
+            ibmMQCAMap.put( "MQCA_INITIATION_Q_NAME", 2008);
+            ibmMQCAMap.put( "MQCA_INSTALLATION_DESC", 2115);
+            ibmMQCAMap.put( "MQCA_INSTALLATION_NAME", 2116);
+            ibmMQCAMap.put( "MQCA_INSTALLATION_PATH", 2117);
+            ibmMQCAMap.put( "MQCA_LAST", 4000);
+            ibmMQCAMap.put( "MQCA_LAST_USED", 2135);
+            ibmMQCAMap.put( "MQCA_LDAP_BASE_DN_GROUPS", 2132);
+            ibmMQCAMap.put( "MQCA_LDAP_BASE_DN_USERS", 2126);
+            ibmMQCAMap.put( "MQCA_LDAP_FIND_GROUP_FIELD", 2135);
+            ibmMQCAMap.put( "MQCA_LDAP_GROUP_ATTR_FIELD", 2134);
+            ibmMQCAMap.put( "MQCA_LDAP_GROUP_OBJECT_CLASS", 2133);
+            ibmMQCAMap.put( "MQCA_LDAP_PASSWORD", 2048);
+            ibmMQCAMap.put( "MQCA_LDAP_SHORT_USER_FIELD", 2127);
+            ibmMQCAMap.put( "MQCA_LDAP_USER_ATTR_FIELD", 2129);
+            ibmMQCAMap.put( "MQCA_LDAP_USER_NAME", 2047);
+            ibmMQCAMap.put( "MQCA_LDAP_USER_OBJECT_CLASS", 2128);
+            ibmMQCAMap.put( "MQCA_LU62_ARM_SUFFIX", 2074);
+            ibmMQCAMap.put( "MQCA_LU_GROUP_NAME", 2072);
+            ibmMQCAMap.put( "MQCA_LU_NAME", 2073);
+            ibmMQCAMap.put( "MQCA_MODEL_DURABLE_Q", 2096);
+            ibmMQCAMap.put( "MQCA_MODEL_NON_DURABLE_Q", 2097);
+            ibmMQCAMap.put( "MQCA_MONITOR_Q_NAME", 2066);
+            ibmMQCAMap.put( "MQCA_NAMELIST_DESC", 2009);
+            ibmMQCAMap.put( "MQCA_NAMELIST_NAME", 2010);
+            ibmMQCAMap.put( "MQCA_NAMES", 2020);
+            ibmMQCAMap.put( "MQCA_PARENT", 2102);
+            ibmMQCAMap.put( "MQCA_PASS_TICKET_APPL", 2086);
+            ibmMQCAMap.put( "MQCA_POLICY_NAME", 2112);
+            ibmMQCAMap.put( "MQCA_PROCESS_DESC", 2011);
+            ibmMQCAMap.put( "MQCA_PROCESS_NAME", 2012);
+            ibmMQCAMap.put( "MQCA_QSG_CERT_LABEL", 2131);
+            ibmMQCAMap.put( "MQCA_QSG_NAME", 2040);
+            ibmMQCAMap.put( "MQCA_Q_DESC", 2013);
+            ibmMQCAMap.put( "MQCA_Q_MGR_DESC", 2014);
+            ibmMQCAMap.put( "MQCA_Q_MGR_IDENTIFIER", 2032);
+            ibmMQCAMap.put( "MQCA_Q_MGR_NAME", 2015);
+            ibmMQCAMap.put( "MQCA_Q_NAME", 2016);
+            ibmMQCAMap.put( "MQCA_RECIPIENT_DN", 2114);
+            ibmMQCAMap.put( "MQCA_REMOTE_Q_MGR_NAME", 2017);
+            ibmMQCAMap.put( "MQCA_REMOTE_Q_NAME", 2018);
+            ibmMQCAMap.put( "MQCA_REPOSITORY_NAME", 2035);
+            ibmMQCAMap.put( "MQCA_REPOSITORY_NAMELIST", 2036);
+            ibmMQCAMap.put( "MQCA_RESUME_DATE", 2098);
+            ibmMQCAMap.put( "MQCA_RESUME_TIME", 2099);
+            ibmMQCAMap.put( "MQCA_SERVICE_DESC", 2078);
+            ibmMQCAMap.put( "MQCA_SERVICE_NAME", 2077);
+            ibmMQCAMap.put( "MQCA_SERVICE_START_ARGS", 2080);
+            ibmMQCAMap.put( "MQCA_SERVICE_START_COMMAND", 2079);
+            ibmMQCAMap.put( "MQCA_SERVICE_STOP_ARGS", 2082);
+            ibmMQCAMap.put( "MQCA_SERVICE_STOP_COMMAND", 2081);
+            ibmMQCAMap.put( "MQCA_SIGNER_DN", 2113);
+            ibmMQCAMap.put( "MQCA_SSL_CERT_ISSUER_NAME", 2130);
+            ibmMQCAMap.put( "MQCA_SSL_CRL_NAMELIST", 2050);
+            ibmMQCAMap.put( "MQCA_SSL_CRYPTO_HARDWARE", 2051);
+            ibmMQCAMap.put( "MQCA_SSL_KEY_LIBRARY", 2069);
+            ibmMQCAMap.put( "MQCA_SSL_KEY_MEMBER", 2070);
+            ibmMQCAMap.put( "MQCA_SSL_KEY_REPOSITORY", 2049);
+            ibmMQCAMap.put( "MQCA_STDERR_DESTINATION", 2084);
+            ibmMQCAMap.put( "MQCA_STDOUT_DESTINATION", 2083);
+            ibmMQCAMap.put( "MQCA_STORAGE_CLASS", 2022);
+            ibmMQCAMap.put( "MQCA_STORAGE_CLASS_DESC", 2042);
+            ibmMQCAMap.put( "MQCA_SYSTEM_LOG_Q_NAME", 2065);
+            ibmMQCAMap.put( "MQCA_TCP_NAME", 2075);
+            ibmMQCAMap.put( "MQCA_TOPIC_DESC", 2093);
+            ibmMQCAMap.put( "MQCA_TOPIC_NAME", 2092);
+            ibmMQCAMap.put( "MQCA_TOPIC_STRING", 2094);
+            ibmMQCAMap.put( "MQCA_TOPIC_STRING_FILTER", 2108);
+            ibmMQCAMap.put( "MQCA_TPIPE_NAME", 2085);
+            ibmMQCAMap.put( "MQCA_TRIGGER_CHANNEL_NAME", 2064);
+            ibmMQCAMap.put( "MQCA_TRIGGER_DATA", 2023);
+            ibmMQCAMap.put( "MQCA_TRIGGER_PROGRAM_NAME", 2062);
+            ibmMQCAMap.put( "MQCA_TRIGGER_TERM_ID", 2063);
+            ibmMQCAMap.put( "MQCA_TRIGGER_TRANS_ID", 2061);
+            ibmMQCAMap.put( "MQCA_USER_DATA", 2021);
+            ibmMQCAMap.put( "MQCA_USER_LIST", 4000);
+            ibmMQCAMap.put( "MQCA_VERSION", 2120);
+            ibmMQCAMap.put( "MQCA_XCF_GROUP_NAME", 2043);
+            ibmMQCAMap.put( "MQCA_XCF_MEMBER_NAME", 2044);
+            ibmMQCAMap.put( "MQCA_XMIT_Q_NAME", 2024);
+            ibmMQCAMap.put( "MQCA_XR_SSL_CIPHER_SUITES", 2123);
+            ibmMQCAMap.put( "MQCA_XR_VERSION", 2122);
+        }
     }
 
     public static String getMQEXTString(Integer num) { initializeConstants(); return ibmMQEXTMap.get(num); }
@@ -5175,4 +5298,5 @@ public class MQConstants { //may god have mercy on me
     public static String getMQCFSTATUSString(Integer num) { initializeConstants(); return ibmMQCFSTATUSMap.get(num); }
     public static String getMQCHSString(Integer num) { initializeConstants(); return ibmMQCHSMap.get(num); }
     public static Integer getMQIAValue(String name) { initializeConstants(); return ibmMQIAMap.get(name); }
+    public static Integer getMQCAValue(String name) { initializeConstants(); return ibmMQCAMap.get(name); }
 }
