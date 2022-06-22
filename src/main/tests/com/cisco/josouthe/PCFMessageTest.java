@@ -65,6 +65,7 @@ public class PCFMessageTest extends TestCase {
             System.out.println(String.format("response %s", response.toString()));
         }
     }
+     */
 
     @Test
     public void testPCFMessageAgentSendTopicMetrics() throws IOException, MQDataException, MQException {
@@ -79,7 +80,8 @@ public class PCFMessageTest extends TestCase {
         PCFMessageAgent pcfMessageAgent = new PCFMessageAgent(queueManager);
         pcfMessageAgent.setWaitInterval(5);
         PCFMessage message = new PCFMessage(CMQCFC.MQCMD_INQUIRE_TOPIC_STATUS);
-        message.addParameter(CMQC.MQCA_TOPIC_STRING, "DEV.BASE.TOPIC");
+        //message.addParameter(CMQCFC.MQIACF_TOPIC_STATUS_TYPE, CMQCFC.MQIACF_TOPIC_SUB );
+        message.addParameter(CMQC.MQCA_TOPIC_STRING, "#");
         System.out.println(String.format("request %s",message.toString()));
         PCFMessage[] responses = pcfMessageAgent.send(message);
         for( PCFMessage response : responses ) {
@@ -87,7 +89,7 @@ public class PCFMessageTest extends TestCase {
         }
     }
 
-     */
+
 
     /*
     @Test

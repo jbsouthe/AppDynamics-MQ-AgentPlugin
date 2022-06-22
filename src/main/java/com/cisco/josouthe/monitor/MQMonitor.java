@@ -48,21 +48,25 @@ public class MQMonitor extends BaseJMSMonitor {
         }
 
         logger.debug(String.format("Topic names: %s", topics.toString()));
-        for( String topicName : topics ) {
-            reportTopicStatus( topicName );
+        if( ! topics.isEmpty() ) {
+            reportTopicStatus( topics );
         }
     }
 
-    private void reportTopicStatus( String topicName ) {
+    private void reportTopicStatus(Set<String> topicNames ) {
         PCFMessageWrapper request = new PCFMessageWrapper(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("MQCMD_INQUIRE_TOPIC_STATUS"));
-        request.addParameter(2094, topicName); //com.ibm.mq.constants.CMQC.MQCA_TOPIC_STRING=2094
+        request.addParameter(2094, "#"); //com.ibm.mq.constants.CMQC.MQCA_TOPIC_STRING=2094
         List<PCFMessageWrapper> responses = agent.send(request);
         for (PCFMessageWrapper response : responses) {
             logger.trace(String.format("Response %s", response.toString()));
-            int pubCount = response.getIntParameterValue("MQIA_PUB_COUNT");
-            reportMetric(String.format("%s|%s|Topic|%s|Publish Count", this.providerName, mqQueueManager.getName(), topicName), pubCount, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
-            int subCount = response.getIntParameterValue("MQIA_SUB_COUNT");
-            reportMetric(String.format("%s|%s|Topic|%s|Subscription Count", this.providerName, mqQueueManager.getName(), topicName), subCount, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
+            String topicName = response.getStringParameterValue("MQCA_ADMIN_TOPIC_NAME");
+            String topicString = response.getStringParameterValue("MQCA_TOPIC_STRING");
+            if (topicNames.contains(topicName)) {
+                int pubCount = response.getIntParameterValue("MQIA_PUB_COUNT");
+                reportMetric(String.format("%s|%s|Topic|%s/%s|Publish Count", this.providerName, mqQueueManager.getName(), topicName, topicString), pubCount, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
+                int subCount = response.getIntParameterValue("MQIA_SUB_COUNT");
+                reportMetric(String.format("%s|%s|Topic|%s/%s|Subscription Count", this.providerName, mqQueueManager.getName(), topicName, topicString), subCount, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
+            }
         }
     }
 
@@ -105,7 +109,7 @@ public class MQMonitor extends BaseJMSMonitor {
 
     private void reportQueueStatus(String shortQueueName) {
         PCFMessageWrapper request = new PCFMessageWrapper(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("CMQCFC.MQCMD_INQUIRE_Q_STATUS"));
-        request.addParameter( MQConstants.getIntFromConstant("CMQC.MQCA_Q_NAME"), shortQueueName);
+        request.addParameter( MQConstants.getIntFromConstant("MQCA_Q_NAME"), shortQueueName);
         request.addParameter( MQConstants.getIntFromConstant("CMQCFC.MQIACF_Q_STATUS_ATTRS"), new Integer[]{ MQConstants.getIntFromConstant("CMQCFC.MQIACF_ALL") });
         List<PCFMessageWrapper> responses = agent.send(request);
         for( PCFMessageWrapper response : responses ) {
