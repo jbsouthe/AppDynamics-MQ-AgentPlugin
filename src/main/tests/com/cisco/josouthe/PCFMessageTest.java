@@ -22,6 +22,7 @@ import java.util.List;
 
 public class PCFMessageTest extends TestCase {
 
+    /*
     @Test
     public void testPCFMessageAgentSendAPI() throws IOException, MQDataException, MQException {
         Hashtable connectionProperties = new Hashtable<String,Object>(); //jmsConnectionFactoryWrapper.getPropertyHashTable("XMSC_WMQ_HOST_NAME", "XMSC_WMQ_PORT", "XMSC_WMQ_CHANNEL", "XMSC_USERID", "XMSC_PASSWORD");
@@ -64,6 +65,30 @@ public class PCFMessageTest extends TestCase {
             System.out.println(String.format("response %s", response.toString()));
         }
     }
+
+    @Test
+    public void testPCFMessageAgentSendTopicMetrics() throws IOException, MQDataException, MQException {
+        Hashtable connectionProperties = new Hashtable<String,Object>(); //jmsConnectionFactoryWrapper.getPropertyHashTable("XMSC_WMQ_HOST_NAME", "XMSC_WMQ_PORT", "XMSC_WMQ_CHANNEL", "XMSC_USERID", "XMSC_PASSWORD");
+        connectionProperties.put("transport", "MQSeries Client");
+        connectionProperties.put("hostname", "localhost");
+        connectionProperties.put("port", 1414);
+        connectionProperties.put("channel", "MONITOR.SRVCONN");
+        connectionProperties.put("userID", "app");
+        connectionProperties.put("password", "passw0rd");
+        MQQueueManager queueManager = new MQQueueManager("QM1", connectionProperties);
+        PCFMessageAgent pcfMessageAgent = new PCFMessageAgent(queueManager);
+        pcfMessageAgent.setWaitInterval(5);
+        PCFMessage message = new PCFMessage(CMQCFC.MQCMD_INQUIRE_TOPIC_STATUS);
+        message.addParameter(CMQC.MQCA_TOPIC_STRING, "DEV.BASE.TOPIC");
+        System.out.println(String.format("request %s",message.toString()));
+        PCFMessage[] responses = pcfMessageAgent.send(message);
+        for( PCFMessage response : responses ) {
+            System.out.println(String.format("response %s", response.toString()));
+        }
+    }
+
+     */
+
     /*
     @Test
     public void testPCFMessageAgentSendReflection() throws Exception {
