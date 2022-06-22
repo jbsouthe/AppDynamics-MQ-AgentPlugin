@@ -3,7 +3,6 @@ package com.cisco.josouthe.monitor;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.cisco.josouthe.exception.UserNotAuthorizedException;
 import com.cisco.josouthe.json.AuthenticationOverrideInfo;
-import com.cisco.josouthe.metric.IBMMQMetric;
 import com.cisco.josouthe.util.ExceptionUtility;
 import com.cisco.josouthe.util.MQConstants;
 import com.cisco.josouthe.wrapper.*;
@@ -17,8 +16,6 @@ public class MQMonitor extends BaseJMSMonitor {
     private PCFMessageAgentWrapper agent;
     private ClassLoader interceptedClassLoader;
     private String providerName;
-    private List<IBMMQMetric> metrics;
-
 
     public MQMonitor(AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper connectionFactoryWrapper, String key, String providerName, AuthenticationOverrideInfo authenticationOverrideInfo) {
         super(aGenericInterceptor, connectionFactoryWrapper, key);
@@ -29,12 +26,6 @@ public class MQMonitor extends BaseJMSMonitor {
         } catch (UserNotAuthorizedException e) {
             logger.info(String.format("Error creating PCFMessageAgent, %s", e.toString()));
         }
-
-        metrics = new ArrayList<>();
-        metrics.add(new IBMMQMetric("Status", "CMQCFC.MQIACF_Q_MGR_STATUS", MQConstants.getIntFromConstant("CMQCFC.MQIACF_Q_MGR_STATUS"),
-                "OBSERVATION", "AVERAGE", "INDIVIDUAL"));
-        metrics.add(new IBMMQMetric("ConnectionCount", "CMQCFC.MQIACF_CONNECTION_COUNT", MQConstants.getIntFromConstant("CMQCFC.MQIACF_CONNECTION_COUNT"),
-                "OBSERVATION", "AVERAGE", "INDIVIDUAL"));
     }
 
 
@@ -51,8 +42,27 @@ public class MQMonitor extends BaseJMSMonitor {
             reportQueueDepth(shortQueueName);
         }
 
+        logger.debug(String.format("Channel names: %s", channels.toString()));
         for( String channelName : channels ) {
             reportChannelStatus( channelName );
+        }
+
+        logger.debug(String.format("Topic names: %s", topics.toString()));
+        for( String topicName : topics ) {
+            reportTopicStatus( topicName );
+        }
+    }
+
+    private void reportTopicStatus( String topicName ) {
+        PCFMessageWrapper request = new PCFMessageWrapper(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("MQCMD_INQUIRE_TOPIC_STATUS"));
+        request.addParameter(2094, topicName); //com.ibm.mq.constants.CMQC.MQCA_TOPIC_STRING=2094
+        List<PCFMessageWrapper> responses = agent.send(request);
+        for (PCFMessageWrapper response : responses) {
+            logger.trace(String.format("Response %s", response.toString()));
+            int pubCount = response.getIntParameterValue("MQIA_PUB_COUNT");
+            reportMetric(String.format("%s|%s|Topic|%s|Publish Count", this.providerName, mqQueueManager.getName(), topicName), pubCount, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
+            int subCount = response.getIntParameterValue("MQIA_SUB_COUNT");
+            reportMetric(String.format("%s|%s|Topic|%s|Subscription Count", this.providerName, mqQueueManager.getName(), topicName), subCount, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
         }
     }
 

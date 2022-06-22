@@ -5,7 +5,6 @@ import com.appdynamics.agent.api.Transaction;
 import com.appdynamics.apm.appagent.api.DataScope;
 import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
-import com.cisco.josouthe.metric.Metric;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 
 import java.text.ParseException;
@@ -19,6 +18,7 @@ public abstract class BaseJMSMonitor implements Comparable{
     protected ISDKLogger logger;
     protected Set<String> queues = new HashSet<>();
     protected Set<String> channels = new HashSet<>();
+    protected Set<String> topics = new HashSet<>();
     private String key;
     private Date creationTime;
     private long lastRunTimestamp;
@@ -48,6 +48,7 @@ public abstract class BaseJMSMonitor implements Comparable{
 
     public synchronized void addQueue( String name ) { queues.add(name); }
     public synchronized void addChannel( String name ) { channels.add(name); }
+    public synchronized void addTopic(String name) { topics.add(name); }
 
     protected void collectSnapshotData(String name, Object value) {
         collectSnapshotData(AppdynamicsAgent.getTransaction(), name, value);
@@ -90,10 +91,6 @@ public abstract class BaseJMSMonitor implements Comparable{
         AppdynamicsAgent.getMetricPublisher().reportMetric(metricPrefix + metricName, metricValue, aggregationType, timeRollupType, clusterRollupType);
     }
 
-    protected void reportMetric(Metric metric, long metricValue) {
-        reportMetric( metric.getName(), metricValue, metric.getAggregationType(), metric.getTimeRollUpType(), metric.getClusterRollUpType() );
-    }
-
     @Override
     public int compareTo(Object o) {
         if( o.toString().equals(this.toString()))
@@ -108,5 +105,4 @@ public abstract class BaseJMSMonitor implements Comparable{
     public long getRelativeTime(long timestamp) {
         return Instant.now().toEpochMilli() - timestamp;
     }
-
 }
