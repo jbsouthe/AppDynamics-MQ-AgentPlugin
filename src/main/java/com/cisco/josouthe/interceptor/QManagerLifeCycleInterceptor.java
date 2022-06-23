@@ -9,19 +9,16 @@ import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 import com.cisco.josouthe.monitor.BaseJMSMonitor;
 import com.cisco.josouthe.monitor.MQMonitor;
 import com.cisco.josouthe.monitor.Scheduler;
-import com.cisco.josouthe.util.MQConstants;
 import com.cisco.josouthe.wrapper.DestinationWrapper;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 import com.cisco.josouthe.wrapper.JmsContextWrapper;
 import com.cisco.josouthe.wrapper.MQQueueManagerWrapper;
-import com.ibm.mq.constants.CMQC;
 import org.json.JSONArray;
 import org.json.JSONTokener;
 
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Hashtable;
