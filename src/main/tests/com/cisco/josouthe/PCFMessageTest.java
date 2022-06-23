@@ -77,6 +77,8 @@ public class PCFMessageTest extends TestCase {
         connectionProperties.put("userID", "app");
         connectionProperties.put("password", "passw0rd");
         MQQueueManager queueManager = new MQQueueManager("QM1", connectionProperties);
+        System.out.println("QMgrName: "+ queueManager.getName());
+        System.out.println(queueManager.getJmqiEnvironment().getEnvironmentProperty("XMSC_WMQ_CHANNEL")); //.getEnvironmentProperty("XMSC_WMQ_CHANNEL"));
         PCFMessageAgent pcfMessageAgent = new PCFMessageAgent(queueManager);
         pcfMessageAgent.setWaitInterval(5);
         PCFMessage message = new PCFMessage(CMQCFC.MQCMD_INQUIRE_TOPIC_STATUS);

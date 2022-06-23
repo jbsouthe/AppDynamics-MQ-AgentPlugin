@@ -9,9 +9,12 @@ import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 import com.cisco.josouthe.monitor.BaseJMSMonitor;
 import com.cisco.josouthe.monitor.MQMonitor;
 import com.cisco.josouthe.monitor.Scheduler;
+import com.cisco.josouthe.util.MQConstants;
 import com.cisco.josouthe.wrapper.DestinationWrapper;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 import com.cisco.josouthe.wrapper.JmsContextWrapper;
+import com.cisco.josouthe.wrapper.MQQueueManagerWrapper;
+import com.ibm.mq.constants.CMQC;
 import org.json.JSONArray;
 import org.json.JSONTokener;
 
@@ -21,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,6 +39,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
     ConcurrentHashMap<String, BaseJMSMonitor> monitors = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, AuthenticationOverrideInfo> authentications = new ConcurrentHashMap<>();
     ConcurrentHashMap<Object, Object> producerContextMap = new ConcurrentHashMap<>();
+    ConcurrentHashMap<Object, BaseJMSMonitor> qMgrMonitorMap = new ConcurrentHashMap<>();
     private AuthenticationOverrideInfo defaultAuthenticationOverrideInfo;
 
     public QManagerLifeCycleInterceptor() {
@@ -170,7 +175,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                         AuthenticationOverrideInfo authenticationOverrideInfo = authentications.get(key);
                         if( authenticationOverrideInfo == null && defaultAuthenticationOverrideInfo != null )
                             authenticationOverrideInfo = defaultAuthenticationOverrideInfo;
-                        monitors.put(key, new MQMonitor(this, connectionFactoryWrapper, key, "IBM MQ JMS", authenticationOverrideInfo ));
+                        monitors.put(key, new MQMonitor(this, key, "IBM MQ JMS", new MQQueueManagerWrapper(this, connectionFactoryWrapper, authenticationOverrideInfo) ));
                     }
                     break;
                 }
@@ -182,20 +187,68 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
         }
 
         /*
-        if( methodName.equals("createConnectionFactory") ) { //JmsConnectionFactory is returned from this object, and then used to make contexts and such
-            if( ! connectionFactoryObjectMap.containsKey(returnVal)) {
-                connectionFactoryObjectMap.put(returnVal,new JmsConnectionFactoryWrapper(this, returnVal));
-            }
-            JmsConnectionFactoryWrapper connectionFactoryWrapper = connectionFactoryObjectMap.get(returnVal);
-            getLogger().debug(String.format("Connection Factory Intercepted for host: %s channel: %s app: %s qmgr: %s"
-                    ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_HOST_NAME") //"XMSC_WMQ_PORT"
-                    ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_CHANNEL")
-                    ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_APPNAME")
-                    ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER")
-            ));
+        MQQueueManager obtainBaseMQQueueManager(String qmgr, Hashtable properties, MQConnectionManager cxMan, URL ccdtUrl) throws MQException {
+        if (Trace.isOn) {
+            Trace.entry(this, "com.ibm.mq.MQQueueManagerFactory", "obtainBaseMQQueueManager(String,Hashtable,MQConnectionManager,URL)", new Object[]{qmgr, Trace.sanitizeMap(properties, "password", "XXXXXXXXXXXX"), cxMan, ccdtUrl});
         }
 
+        String transport = this.determineTransport(properties);
+        MQManagedConnectionFactory mcf = MQSESSION.getMQManagedConnectionFactory(transport, qmgr, properties);
+        MQConnectionRequestInfo cxReqInf = MQSESSION.getConnectionRequestInfo(transport, properties, ccdtUrl);
+
+        MQQueueManager m;
+        try {
+            m = (MQQueueManager)cxMan.allocateConnection(mcf, cxReqInf);
+
          */
+        if( methodName.equals("obtainBaseMQQueueManager") ) { //this is the constructor for an MQQueueManager, with arguments regarding construction
+            String key = getKey( (Hashtable) params[1] );
+            if(! monitors.containsKey(key)) {
+                AuthenticationOverrideInfo authenticationOverrideInfo = authentications.get(key);
+                if( authenticationOverrideInfo == null && defaultAuthenticationOverrideInfo != null )
+                    authenticationOverrideInfo = defaultAuthenticationOverrideInfo;
+                monitors.put(key, new MQMonitor(this, key, "IBM MQ JMS", new MQQueueManagerWrapper(this, returnVal, (String) params[0], (Hashtable) params[1], authenticationOverrideInfo ) ));
+            }
+            qMgrMonitorMap.put(objectIntercepted, monitors.get(key));
+        }
+
+        if( methodName.equals("accessQueue") ) {
+            String queueName = (String) params[0];
+            BaseJMSMonitor monitor = qMgrMonitorMap.get(objectIntercepted);
+            if( monitor != null ) {
+                monitor.addQueue(queueName);
+            }
+        }
+
+        if( methodName.equals("accessTopic") ) {
+            BaseJMSMonitor monitor = qMgrMonitorMap.get(objectIntercepted);
+            String topicString = null;
+            String topicName = null;
+            if( params[0] instanceof String ) {
+                topicString = (String) params[0];
+                topicName = (String) params[1];
+            } else {
+                topicString = (String) params[1];
+                topicName = (String) params[2];
+            }
+            if( monitor != null ) {
+                if( topicString != null ) monitor.addTopic(topicString);
+                if( topicName != null ) monitor.addTopic(topicName);
+            }
+        }
+
+        if( methodName.equals("put") ) {
+            BaseJMSMonitor monitor = qMgrMonitorMap.get(objectIntercepted);
+            if( monitor != null ) {
+                if (params[0] instanceof String) { //this is a queue
+                    monitor.addQueue( (String)params[0]);
+                } else { //the first param is an int specifying type
+                    int type = (Integer) params[0];
+                    if( type == 1 ) monitor.addQueue((String) params[1]);
+                    if( type == 8 ) monitor.addTopic((String) params[1]);
+                }
+            }
+        }
 
     }
 
@@ -224,6 +277,10 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
         } else {
             getLogger().debug(String.format("Connection not found for this object: %s", context.getConnectionName()));
         }
+    }
+
+    private String getKey( Hashtable properties ) {
+        return String.format("IBM MQ JMS Provider:%s:%d", String.valueOf(properties.get("hostname")), Integer.valueOf(String.valueOf(properties.get("port"))) );
     }
 
     private BaseJMSMonitor getMonitor( JmsContextWrapper context ) {
@@ -284,6 +341,21 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 .classMatchType(SDKClassMatchType.IMPLEMENTS_INTERFACE)
                 .methodMatchString("createContext")
                 .methodStringMatchType(SDKStringMatchType.EQUALS)
+                .build());
+        rules.add( new Rule.Builder("com.ibm.mq.MQQueueManagerFactory")
+                .classMatchType(SDKClassMatchType.MATCHES_CLASS)
+                .methodMatchString("obtainBaseMQQueueManager")
+                .methodStringMatchType(SDKStringMatchType.EQUALS)
+                .build());
+        rules.add( new Rule.Builder("com.ibm.mq.MQQueueManager")
+                .classMatchType(SDKClassMatchType.MATCHES_CLASS)
+                .methodMatchString("access")
+                .methodStringMatchType(SDKStringMatchType.STARTSWITH)
+                .build());
+        rules.add( new Rule.Builder("com.ibm.mq.MQQueueManager")
+                .classMatchType(SDKClassMatchType.MATCHES_CLASS)
+                .methodMatchString("put")
+                .methodStringMatchType(SDKStringMatchType.STARTSWITH)
                 .build());
         return rules;
     }

@@ -40,6 +40,20 @@ public class MQQueueManagerWrapper extends BaseWrapper{
         init(jmsConnectionFactoryWrapper.getObject().getClass().getClassLoader());
     }
 
+    public MQQueueManagerWrapper( ASDKPlugin aGenericInterceptor, Object qMgrObject, String qMgrName, Hashtable properties, AuthenticationOverrideInfo authenticationOverrideInfo ) {
+        super(aGenericInterceptor, null, null);
+        queue= qMgrName;
+        hostname = String.valueOf(properties.get("hostname"));
+        port = Integer.valueOf(String.valueOf(properties.get("port")));
+        channel = String.valueOf(properties.get("channel"));
+        if( authenticationOverrideInfo != null && authenticationOverrideInfo.channel != null ) channel=authenticationOverrideInfo.channel;
+        userID = String.valueOf(properties.get("userID"));
+        if( authenticationOverrideInfo != null && authenticationOverrideInfo.userID != null ) userID=authenticationOverrideInfo.userID;
+        password = String.valueOf(properties.get("password"));
+        if( authenticationOverrideInfo != null && authenticationOverrideInfo.password != null ) password=authenticationOverrideInfo.password;
+        init(qMgrObject.getClass().getClassLoader());
+    }
+
     protected void initMethods() {
         constructor = interceptor.getNewReflectionBuilder()
                 .createObject("com.ibm.mq.MQQueueManager", String.class.getCanonicalName(), Hashtable.class.getCanonicalName() )
@@ -88,4 +102,5 @@ public class MQQueueManagerWrapper extends BaseWrapper{
     public String getChannel() { return channel; }
     public void setChannel( String s ) { channel=s; }
     public String getName() { return queue; }
+    public String getConnectionKey() { return String.format("IBM MQ JMS Provider:%s:%d", hostname, port); }
 }

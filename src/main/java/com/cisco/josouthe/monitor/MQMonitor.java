@@ -1,5 +1,6 @@
 package com.cisco.josouthe.monitor;
 
+import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.cisco.josouthe.exception.UserNotAuthorizedException;
 import com.cisco.josouthe.json.AuthenticationOverrideInfo;
@@ -17,10 +18,10 @@ public class MQMonitor extends BaseJMSMonitor {
     private ClassLoader interceptedClassLoader;
     private String providerName;
 
-    public MQMonitor(AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper connectionFactoryWrapper, String key, String providerName, AuthenticationOverrideInfo authenticationOverrideInfo) {
-        super(aGenericInterceptor, connectionFactoryWrapper, key);
+    public MQMonitor(ASDKPlugin aGenericInterceptor, String key, String providerName, MQQueueManagerWrapper mqQueueManagerWrapper) {
+        super(aGenericInterceptor, key);
         this.providerName=providerName;
-        mqQueueManager = new MQQueueManagerWrapper(aGenericInterceptor, connectionFactoryWrapper, authenticationOverrideInfo);
+        mqQueueManager = mqQueueManagerWrapper;
         try {
             agent = new PCFMessageAgentWrapper(aGenericInterceptor, mqQueueManager );
         } catch (UserNotAuthorizedException e) {
@@ -31,7 +32,7 @@ public class MQMonitor extends BaseJMSMonitor {
 
     @Override
     public void run() {
-        logger.debug(String.format("IBM MQ Monitor run method called for %s", connectionFactoryWrapper.toString()));
+        logger.debug(String.format("IBM MQ Monitor run method called for %s", mqQueueManager.toString()));
         reportQueueManagerStatus();
 
         //if( queues.isEmpty() ) queues.add("queue:///DEV.QUEUE.1"); //for testing
@@ -55,13 +56,13 @@ public class MQMonitor extends BaseJMSMonitor {
 
     private void reportTopicStatus(Set<String> topicNames ) {
         PCFMessageWrapper request = new PCFMessageWrapper(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("MQCMD_INQUIRE_TOPIC_STATUS"));
-        request.addParameter(2094, "#"); //com.ibm.mq.constants.CMQC.MQCA_TOPIC_STRING=2094
+        request.addParameter(MQConstants.getIntFromConstant("MQCA_TOPIC_STRING"), "#"); //com.ibm.mq.constants.CMQC.MQCA_TOPIC_STRING=2094
         List<PCFMessageWrapper> responses = agent.send(request);
         for (PCFMessageWrapper response : responses) {
             logger.trace(String.format("Response %s", response.toString()));
             String topicName = response.getStringParameterValue("MQCA_ADMIN_TOPIC_NAME");
             String topicString = response.getStringParameterValue("MQCA_TOPIC_STRING");
-            if (topicNames.contains(topicName)) {
+            if (topicNames.contains(topicName) || topicNames.contains(topicString)) {
                 int pubCount = response.getIntParameterValue("MQIA_PUB_COUNT");
                 reportMetric(String.format("%s|%s|Topic|%s/%s|Publish Count", this.providerName, mqQueueManager.getName(), topicName, topicString), pubCount, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
                 int subCount = response.getIntParameterValue("MQIA_SUB_COUNT");

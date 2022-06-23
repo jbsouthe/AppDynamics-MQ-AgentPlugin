@@ -3,6 +3,7 @@ package com.cisco.josouthe.monitor;
 import com.appdynamics.agent.api.AppdynamicsAgent;
 import com.appdynamics.agent.api.Transaction;
 import com.appdynamics.apm.appagent.api.DataScope;
+import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
@@ -13,8 +14,7 @@ import java.time.Instant;
 import java.util.*;
 
 public abstract class BaseJMSMonitor implements Comparable{
-    protected JmsConnectionFactoryWrapper connectionFactoryWrapper;
-    protected AGenericInterceptor interceptor;
+    protected ASDKPlugin interceptor;
     protected ISDKLogger logger;
     protected Set<String> queues = new HashSet<>();
     protected Set<String> channels = new HashSet<>();
@@ -25,8 +25,7 @@ public abstract class BaseJMSMonitor implements Comparable{
     private String metricPrefix = "Custom Metrics|";
     private SimpleDateFormat mqDateFormatter;
 
-    public BaseJMSMonitor( AGenericInterceptor aGenericInterceptor, JmsConnectionFactoryWrapper connectionFactoryWrapper, String key) {
-        this.connectionFactoryWrapper=connectionFactoryWrapper;
+    public BaseJMSMonitor( ASDKPlugin aGenericInterceptor, String key) {
         this.interceptor=aGenericInterceptor;
         this.key=key;
         this.creationTime= new Date();
