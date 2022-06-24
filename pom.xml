@@ -22,6 +22,54 @@
             <version>1.0</version>
             <scope>test</scope>
         </dependency>
+      <!-- install java agent for testing reflection mvn install:install-file -DgroupId=com.appdynamics -DartifactId=agent-jar -Dpackaging=jar -Dversion=22.2.0.33545 -Dfile=javaagent.jar -DgeneratePom=true -->
+      <dependency>
+          <groupId>com.appdynamics</groupId>
+          <artifactId>agent-jar</artifactId>
+          <version>22.2.0.33545</version>
+          <scope>test</scope>
+      </dependency>
+      <!-- install appagent.jar mvn install:install-file -DgroupId=com.appdynamics -DartifactId=appagent-jar -Dpackaging=jar -Dversion=22.2.0.33545 -Dfile=appagent.jar -DgeneratePom=true -->
+      <dependency>
+          <groupId>com.appdynamics</groupId>
+          <artifactId>appagent-jar</artifactId>
+          <version>22.2.0.33545</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>javax.inject</groupId>
+          <artifactId>javax.inject</artifactId>
+          <version>LATEST</version>
+          <scope>test</scope>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/com.google.dagger/dagger -->
+      <dependency>
+          <groupId>com.google.dagger</groupId>
+          <artifactId>dagger</artifactId>
+          <version>LATEST</version>
+          <scope>test</scope>
+      </dependency>
+      <!-- install appagent-boot.jar mvn install:install-file -DgroupId=com.appdynamics -DartifactId=appagent-boot-jar -Dpackaging=jar -Dversion=22.2.0.33545 -Dfile=appagent-boot.jar -DgeneratePom=true -->
+      <dependency>
+          <groupId>com.appdynamics</groupId>
+          <artifactId>appagent-boot-jar</artifactId>
+          <version>22.2.0.33545</version>
+          <scope>test</scope>
+      </dependency>
+      <!-- install common-utils.jar mvn install:install-file -DgroupId=com.appdynamics -DartifactId=common-utils-jar -Dpackaging=jar -Dversion=22.2.0.33545 -Dfile=common-utils.jar -DgeneratePom=true -->
+      <dependency>
+          <groupId>com.appdynamics</groupId>
+          <artifactId>common-utils-jar</artifactId>
+          <version>22.2.0.33545</version>
+          <scope>test</scope>
+      </dependency>
+      <!-- mvn install:install-file -DgroupId=com.appdynamics -DartifactId=tp-singularity-xml-jar -Dpackaging=jar -Dversion=22.2.0.33545 -Dfile=tp/singularity-xml-2.12.0.2.jar -DgeneratePom=true -->
+      <dependency>
+          <groupId>com.appdynamics</groupId>
+          <artifactId>tp-singularity-xml-jar</artifactId>
+          <version>22.2.0.33545</version>
+          <scope>test</scope>
+      </dependency>
       <!-- https://mvnrepository.com/artifact/com.ibm.mq/com.ibm.mq.allclient -->
       <dependency>
           <groupId>com.ibm.mq</groupId>
@@ -91,8 +139,10 @@
             <groupId>org.apache.maven.plugins</groupId>
 			<artifactId>maven-compiler-plugin</artifactId>
 			<configuration>
-				<source>1.8</source>
-				<target>1.8</target>
+				<source>8</source>
+				<target>8</target>
+                <testSource>8</testSource>
+                <testTarget>8</testTarget>
 			</configuration>
 		</plugin>
         <plugin>
