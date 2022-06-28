@@ -1,22 +1,29 @@
 package com.cisco.josouthe.monitor;
 
+import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
+
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Scheduler extends Thread {
     private static final String THREAD_NAME = "AppDynamics MQ Monitor Thread";
+    private ISDKLogger logger;
     ConcurrentHashMap<String, BaseJMSMonitor> monitors = null;
     long sleepTime = 30000;
     private static Scheduler instance = null;
 
-    public synchronized static Scheduler getInstance(long sleepTimeMS, ConcurrentHashMap<String, BaseJMSMonitor> monitors ) {
+    public synchronized static Scheduler getInstance(long sleepTimeMS, ConcurrentHashMap<String, BaseJMSMonitor> monitors, ISDKLogger isdkLogger) {
         if( instance == null )
-            instance = new Scheduler();
-        if( sleepTimeMS > 30000 ) instance.sleepTime = sleepTimeMS; //safety check, we aren't going faster than this
+            instance = new Scheduler(isdkLogger);
+        if( sleepTimeMS > 30000 ) { //safety check, we aren't going faster than this
+            instance.sleepTime = sleepTimeMS;
+        }
+        isdkLogger.info(String.format("Setting sleep time between monitoring intervals to %d(ms). Set this with argument -DIBMMQAgentPlugin.sleepTimeMS=#. Default and minimum is 30000ms", instance.sleepTime));
         instance.monitors = monitors;
         return instance;
     }
 
-    private Scheduler() {
+    private Scheduler(ISDKLogger isdkLogger) {
+        this.logger = isdkLogger;
         setDaemon(true);
         try {
             setPriority( (int)getPriority()/2 );
@@ -24,6 +31,7 @@ public class Scheduler extends Thread {
             //we tried, no op
         }
         setName(THREAD_NAME);
+        logger.debug("Created a new instance of the Scheduler to run monitors");
     }
 
     /**

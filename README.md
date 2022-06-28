@@ -59,3 +59,10 @@ Here is an example of such a file:
         { "hostname": "someHost", "port": 1414, "userID": "mqm", "password": "", "channel": "MONITOR.SRVCONN" },
         { "hostname": "someOtherHost", "port": 1414, "userID": "someOtherUser", "password": "someOtherPassword", "channel": "MONITOR.SRVCONN" }
     ]
+
+###Sleep interval between collection runs
+
+To modify the sleep between monitoring runs to pull data from the Queue Managers from 30,000ms (30 seconds) to something higher, the minimum is enforced to 30 seconds. set the following JVM property:
+
+    -DIBMMQAgentPlugin.sleepTimeMS=##
+

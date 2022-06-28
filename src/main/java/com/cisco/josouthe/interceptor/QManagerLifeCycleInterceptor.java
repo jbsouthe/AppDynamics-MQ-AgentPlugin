@@ -304,7 +304,8 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
 
     private void initializeScheduler() {
         if( scheduler != null ) return;
-        scheduler = Scheduler.getInstance(30000, monitors);
+        long sleepTimeMS = Long.parseLong(System.getProperty( "IBMMQAgentPlugin.sleepTimeMS", "30000"));
+        scheduler = Scheduler.getInstance(sleepTimeMS, monitors, getLogger());
         scheduler.start();
         getLogger().debug("Initialized Scheduler to monitor MQ");
 
