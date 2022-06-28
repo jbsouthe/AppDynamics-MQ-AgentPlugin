@@ -8,7 +8,7 @@ import java.net.URI;
 public class MQMonitorTest extends TestCase {
 
     public void testGetQueueName() {
-        String queueName = "queue:///DEV.QUEUE.1";
+        String queueName = "queue:///DEV.QUEUE.1?someoption=true";
         String finalName = queueName;
         try {
             URI url = new URI(queueName);

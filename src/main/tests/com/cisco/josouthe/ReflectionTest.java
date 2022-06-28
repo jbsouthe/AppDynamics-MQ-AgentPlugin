@@ -26,6 +26,7 @@ import java.util.Map;
 public class ReflectionTest extends Assume {
     private LifeCycleManager lifeCycleManager;
     private IReflectionBuilder getNewReflectionBuilder() throws Exception {
+        ReflectorFactory.initialize(JavaReflector.Builder.class);
         return ReflectorFactory.getInstance().getNewReflectionBuilder();
     }
 
@@ -60,10 +61,6 @@ public class ReflectionTest extends Assume {
 
     @Test
     public void testMapReflection() throws Exception {
-        ReflectorFactory.initialize(JavaReflector.Builder.class);
-        ReflectorFactory.getInstance().getNewReflectionBuilder();
-
-        LifeCycleManager.getInjector();
         Map<String,String> testMap = new HashMap<>();
         testMap.put("test","test");
 
@@ -73,6 +70,34 @@ public class ReflectionTest extends Assume {
         String string = (String) toString.execute(testMap.getClass().getClassLoader(), testMap);
         System.out.println("map: "+ string);
         assert "{test=test}".equals(string);
+    }
+
+    @Test
+    public void testInterfaceStaticInt() throws Exception {
+        /*
+        //com.ibm.mq.constants.CMQC.MQCA_TOPIC_STRING=2094
+        IReflector cmqc = getNewReflectionBuilder().loadClass("com.ibm.mq.constants.CMQC").build(); //.accessFieldValue("MQCA_TOPIC_STRING", true).build();
+        IReflector topicString = getNewReflectionBuilder().accessFieldValue("MQCA_TOPIC_STRING", false).build();
+        Object cmqcObject = cmqc.execute(this.getClass().getClassLoader(), null);
+        int integerValue = (int) topicString.execute(cmqcObject.getClass().getClassLoader(), cmqcObject);
+        assert integerValue == 2094;
+
+
+
+        IReflector builtTimestamp = getNewReflectionBuilder().loadClass("com.cisco.josouthe.MetaData").accessFieldValue("BUILDTIMESTAMP", true).build();
+        String timestampString = (String) builtTimestamp.execute(this.getClass().getClassLoader(), this);
+        System.out.println(timestampString);
+
+         */
+        IReflector metaDataReflector = getNewReflectionBuilder().loadClass("com.cisco.josouthe.MetaData").build();
+        Object metaDataObject = metaDataReflector.execute(this.getClass().getClassLoader(), null);
+        Field[] fields = MetaData.class.getFields();
+        for( Field field : fields )
+            System.out.println("Field: "+ field.toString());
+
+        IReflector version = getNewReflectionBuilder().accessFieldValue("VERSION", false).build();
+        String versionString = (String) version.execute(this.getClass().getClassLoader(), MetaData.class);
+        System.out.println("Version: "+ versionString);
     }
 
 }
