@@ -10,7 +10,7 @@ public class JmsProducerWrapper extends BaseWrapper {
         super(aGenericInterceptor, objectToWrap, parentObject);
     }
 
-    protected void initMethods() {
+    public void initMethods() {
 
     }
 }

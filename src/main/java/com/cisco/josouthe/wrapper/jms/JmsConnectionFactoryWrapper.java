@@ -20,7 +20,7 @@ public class JmsConnectionFactoryWrapper extends BaseWrapper {
         super(aGenericInterceptor, objectToWrap, null);
     }
 
-    protected void initMethods() {
+    public void initMethods() {
         getStringProperty = makeInvokeInstanceMethodReflector("getStringProperty", String.class.getCanonicalName() );
         getIntProperty = makeInvokeInstanceMethodReflector("getIntProperty", String.class.getCanonicalName());
         getBooleanProperty = makeInvokeInstanceMethodReflector("getBooleanProperty", String.class.getCanonicalName());

@@ -27,7 +27,7 @@ public class PCFMessageWrapper extends BaseWrapper {
         logger.debug(String.format("Initialized IBM MQ PCFMessage from object: %s", message.toString()));
     }
 
-    protected void initMethods() {
+    public void initMethods() {
         constructor = interceptor.getNewReflectionBuilder().createObject("com.ibm.mq.headers.pcf.PCFMessage", new String[] { int.class.getCanonicalName() }).build();
         addParameterIntArray = makeInvokeInstanceMethodReflector("addParameter", int.class.getCanonicalName(), "[I" );
         addParameterString = makeInvokeInstanceMethodReflector("addParameter", int.class.getCanonicalName(), String.class.getCanonicalName() );

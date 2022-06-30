@@ -2,12 +2,10 @@ package com.cisco.josouthe.wrapper;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
-import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException;
 import com.cisco.josouthe.exception.MQErrorException;
 import com.cisco.josouthe.util.ExceptionUtility;
-import org.bouncycastle.jcajce.provider.symmetric.ARC4;
 
 public abstract class BaseWrapper {
     protected ASDKPlugin interceptor;
@@ -45,6 +43,7 @@ public abstract class BaseWrapper {
         return interceptor.getNewReflectionBuilder().accessFieldValue( field, true).build();
     }
 
+    protected String getReflectiveString(IReflector method, String defaultString) { return getReflectiveString(this.object, method, defaultString); }
     protected String getReflectiveString(Object object, IReflector method, String defaultString) {
         String value = defaultString;
         if( object == null || method == null ) return defaultString;
@@ -57,6 +56,7 @@ public abstract class BaseWrapper {
         return value;
     }
 
+    protected Integer getReflectiveInteger(IReflector method, Integer defaultInteger) { return getReflectiveInteger(this.object, method, defaultInteger); }
     protected Integer getReflectiveInteger(Object object, IReflector method, Integer defaultInteger) {
         Integer value = defaultInteger;
         if( object == null || method == null ) return defaultInteger;
@@ -69,6 +69,7 @@ public abstract class BaseWrapper {
         return value;
     }
 
+    protected Long getReflectiveLong( IReflector method ) { return getReflectiveLong(this.object, method); }
     protected Long getReflectiveLong( Object object, IReflector method ) {
         if( object == null || method == null ) return null;
         Object rawValue = getReflectiveObject( object, method );
@@ -79,6 +80,7 @@ public abstract class BaseWrapper {
         return null;
     }
 
+    protected Object getReflectiveObject(IReflector method, Object... args) { return getReflectiveObject(this.object, method, args); }
     protected Object getReflectiveObject(Object object, IReflector method, Object... args) {
         Object value = null;
         if( object == null || method == null ) return value;

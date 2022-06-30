@@ -35,7 +35,7 @@ public class PCFMessageAgentWrapper extends BaseWrapper {
         }
     }
 
-    protected void initMethods() {
+    public void initMethods() {
         send = makeInvokeInstanceMethodReflector("send", "com.ibm.mq.headers.pcf.PCFMessage");
         setWaitInterval = makeInvokeInstanceMethodReflector( "setWaitInterval", int.class.getCanonicalName(), int.class.getCanonicalName() );
         constructor = interceptor.getNewReflectionBuilder()

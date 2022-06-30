@@ -19,7 +19,7 @@ public class JmsContextWrapper extends BaseWrapper {
         this.metaDataObject = getReflectiveObject(this.object, getMetaData);
     }
 
-    protected void initMethods() {
+    public void initMethods() {
         getMetaData = makeInvokeInstanceMethodReflector("getMetaData");
         getJMSProviderName = makeInvokeInstanceMethodReflector("getJMSProviderName");
         internalJmsConnectionImpl = makeAccessFieldValueReflector("connection");
