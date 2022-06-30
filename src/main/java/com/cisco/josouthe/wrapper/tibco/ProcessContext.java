@@ -25,4 +25,8 @@ public class ProcessContext extends BaseWrapper {
     public String getFullCallName() { return (String) getReflectiveObject(getFullCallName); }
     public String getName() { return (String) getReflectiveObject(getName); }
     public Long getId() { return (Long) getReflectiveObject(getId); }
+
+    public String toString() {
+        return String.format("Service: %s Invocation Name: %s Full Call Name: %s Name: %s Id: %d", getService(), getInvocationName(), getFullCallName(), getName(), getId());
+    }
 }

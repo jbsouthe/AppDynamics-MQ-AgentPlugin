@@ -13,6 +13,7 @@ import com.cisco.josouthe.wrapper.ibmmq.DestinationWrapper;
 import com.cisco.josouthe.wrapper.jms.JmsConnectionFactoryWrapper;
 import com.cisco.josouthe.wrapper.jms.JmsContextWrapper;
 import com.cisco.josouthe.wrapper.ibmmq.MQQueueManagerWrapper;
+import com.cisco.josouthe.wrapper.tibco.*;
 import org.json.JSONArray;
 import org.json.JSONTokener;
 
@@ -120,11 +121,23 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
             producerContextMap.put(returnVal, objectIntercepted);
         }
 
-        if( methodName.equals("send") ) { //JMSProducer.send( Destination, Message )
-            if(producerContextMap.containsKey(objectIntercepted) ) {
-                JmsContextWrapper context = getJmsContextWrapper( producerContextMap.get(objectIntercepted) );
-                DestinationWrapper destination = new DestinationWrapper( this, params[0], objectIntercepted);
-                addToMonitor(context, destination);
+        if( methodName.equals("send") ) { //JMSProducer.send( Destination, Message ) or "com.tibco.plugin.share.jms.impl.JMSSender.send()"
+            if("com.tibco.plugin.share.jms.impl.JMSSender".equals(className)) {
+                JMSSender jmsSender = new JMSSender(this, objectIntercepted, null);
+                SenderConfiguration senderConfiguration = jmsSender.getConfiguration();
+                ProcessContext processContext = new ProcessContext(this, params[0], jmsSender.getObject());
+                JMSSenderRequestMessage senderRequestMessage = new JMSSenderRequestMessage(this, params[1], jmsSender.getObject());
+                ActivityContext activityContext = new ActivityContext(this, params[2], jmsSender.getObject());
+                getLogger().debug(
+                        String.format("Process Context: '%s'\n\tJMS Sender Request Message: '%s'\n\tActivity Context: '%s'\n\tSender Configuration: '%s'",
+                            processContext, senderRequestMessage, activityContext, senderConfiguration)
+                );
+            } else { //must be a JMSProducer
+                if (producerContextMap.containsKey(objectIntercepted)) {
+                    JmsContextWrapper context = getJmsContextWrapper(producerContextMap.get(objectIntercepted));
+                    DestinationWrapper destination = new DestinationWrapper(this, params[0], objectIntercepted);
+                    addToMonitor(context, destination);
+                }
             }
         }
 
@@ -316,6 +329,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
     public List<Rule> initializeRules() {
         ArrayList<Rule> rules = new ArrayList<Rule>();
 
+        //Generic JMS Interfaces...
         rules.add( new Rule.Builder("javax.jms.JMSContext")
                 .classMatchType(SDKClassMatchType.IMPLEMENTS_INTERFACE)
                 .methodMatchString("create")
@@ -331,6 +345,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 .methodMatchString("send")
                 .methodStringMatchType(SDKStringMatchType.EQUALS)
                 .build());
+        //IBM MQ JMS Interfaces and client calls...
         rules.add( new Rule.Builder("com.ibm.msg.client.jms.JmsFactoryFactory")
                 .classMatchType(SDKClassMatchType.INHERITS_FROM_CLASS)
                 .methodMatchString("createConnectionFactory")
@@ -355,6 +370,12 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 .classMatchType(SDKClassMatchType.MATCHES_CLASS)
                 .methodMatchString("put")
                 .methodStringMatchType(SDKStringMatchType.STARTSWITH)
+                .build());
+        //FFS TIBCO does it this way....
+        rules.add( new Rule.Builder("com.tibco.plugin.share.jms.impl.JMSSender")
+                .classMatchType(SDKClassMatchType.MATCHES_CLASS)
+                .methodMatchString("send")
+                .methodStringMatchType(SDKStringMatchType.EQUALS)
                 .build());
         return rules;
     }

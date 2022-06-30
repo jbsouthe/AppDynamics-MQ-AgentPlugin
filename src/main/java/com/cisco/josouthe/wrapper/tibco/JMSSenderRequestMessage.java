@@ -62,4 +62,8 @@ public class JMSSenderRequestMessage extends BaseWrapper { //com.tibco.plugin.jm
     public String getMessageBodyAsString() { return (String) getReflectiveObject(getMessageBodyAsString); }
     public String getReplyToName() { return (String) getReflectiveObject(getReplyToName); }
     public String getCorrelationId() { return (String) getReflectiveObject(getCorrelationId); }
+
+    public String toString() {
+        return String.format("Destination: %s Type: %s Message Body: '%s' Correlation Id: %s", getDestinationName(), getType(), getMessageBodyAsString(), getCorrelationId());
+    }
 }

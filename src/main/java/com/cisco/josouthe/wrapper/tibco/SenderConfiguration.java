@@ -39,4 +39,9 @@ public class SenderConfiguration extends BaseWrapper { //com.tibco.plugin.share.
     public boolean isOneWay() { return (Boolean) getReflectiveObject(isOneWay); }
     public boolean isOverrideTx() { return (Boolean) getReflectiveObject(isOverrideTx); }
     public boolean isReplyActivity() { return (Boolean) getReflectiveObject(isReplyActivity); }
+
+    public String toString() {
+        return String.format("Delivery Mode: %d Priority: %d Message Type: %s is queue: %s Destination: %s Connection Reference: %s Type Header: %s",
+                getDeliveryMode(), getPriority(), getMessageType(), isQueue(), getDestination(), getConnectionReference(), getTypeHeader());
+    }
 }
