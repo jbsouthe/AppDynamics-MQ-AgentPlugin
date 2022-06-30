@@ -1,10 +1,11 @@
-package com.cisco.josouthe.wrapper;
+package com.cisco.josouthe.wrapper.ibmmq;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException;
+import com.cisco.josouthe.wrapper.BaseWrapper;
 
-public class DestinationWrapper extends BaseWrapper{
+public class DestinationWrapper extends BaseWrapper {
     private IReflector getQueueName, getTopicName, toString;
     private boolean typeIsQueue = false;
     private boolean typeIsTopic = false;
@@ -27,7 +28,7 @@ public class DestinationWrapper extends BaseWrapper{
     }
 
     @Override
-    void initMethods() {
+    public void initMethods() {
         getQueueName = makeInvokeInstanceMethodReflector("getQueueName");
         getTopicName = makeInvokeInstanceMethodReflector("getTopicName");
         toString = makeInvokeInstanceMethodReflector("toString");

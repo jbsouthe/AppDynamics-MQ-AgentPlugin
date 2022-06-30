@@ -5,8 +5,6 @@ import com.appdynamics.agent.api.Transaction;
 import com.appdynamics.apm.appagent.api.DataScope;
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.logging.ISDKLogger;
-import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
-import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

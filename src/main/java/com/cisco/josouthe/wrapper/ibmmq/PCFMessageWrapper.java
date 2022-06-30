@@ -1,13 +1,14 @@
-package com.cisco.josouthe.wrapper;
+package com.cisco.josouthe.wrapper.ibmmq;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.cisco.josouthe.util.MQConstants;
+import com.cisco.josouthe.wrapper.BaseWrapper;
 
 import java.util.Arrays;
 
-public class PCFMessageWrapper extends BaseWrapper{
+public class PCFMessageWrapper extends BaseWrapper {
     private IReflector addParameterIntArray, addParameterString, getIntParameterValue, constructor, getStringParameterValue, toString;
 
     public PCFMessageWrapper(ASDKPlugin aGenericInterceptor, Object parentObject, Integer creationOptions) {

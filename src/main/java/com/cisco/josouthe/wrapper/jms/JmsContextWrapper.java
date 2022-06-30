@@ -1,12 +1,13 @@
-package com.cisco.josouthe.wrapper;
+package com.cisco.josouthe.wrapper.jms;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
+import com.cisco.josouthe.wrapper.BaseWrapper;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class JmsContextWrapper extends BaseWrapper{
+public class JmsContextWrapper extends BaseWrapper {
     private IReflector getMetaData, getJMSProviderName, internalJmsConnectionImpl;
     private Object metaDataObject;
     private Set<String> queueNames = new HashSet<>();

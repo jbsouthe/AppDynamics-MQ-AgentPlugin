@@ -72,6 +72,7 @@ public class ReflectionTest extends Assume {
         assert "{test=test}".equals(string);
     }
 
+    /*
     @Test
     public void testInterfaceStaticInt() throws Exception {
         /*
@@ -89,6 +90,7 @@ public class ReflectionTest extends Assume {
         System.out.println(timestampString);
 
          */
+    /*
         IReflector metaDataReflector = getNewReflectionBuilder().loadClass("com.cisco.josouthe.MetaData").build();
         Object metaDataObject = metaDataReflector.execute(this.getClass().getClassLoader(), null);
         Field[] fields = MetaData.class.getFields();
@@ -99,5 +101,7 @@ public class ReflectionTest extends Assume {
         String versionString = (String) version.execute(this.getClass().getClassLoader(), MetaData.class);
         System.out.println("Version: "+ versionString);
     }
+
+     */
 
 }

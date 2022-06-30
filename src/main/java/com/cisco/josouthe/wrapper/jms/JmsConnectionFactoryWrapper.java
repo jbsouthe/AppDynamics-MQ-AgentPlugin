@@ -1,15 +1,15 @@
-package com.cisco.josouthe.wrapper;
+package com.cisco.josouthe.wrapper.jms;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
-import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
+import com.cisco.josouthe.wrapper.BaseWrapper;
 
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
 
-public class JmsConnectionFactoryWrapper extends BaseWrapper{
+public class JmsConnectionFactoryWrapper extends BaseWrapper {
 
     private IReflector getStringProperty, getIntProperty, getBooleanProperty, getPropertyNames, getObjectProperty;
     private IReflector createContext;

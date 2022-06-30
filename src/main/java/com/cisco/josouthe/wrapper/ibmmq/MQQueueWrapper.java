@@ -1,9 +1,10 @@
-package com.cisco.josouthe.wrapper;
+package com.cisco.josouthe.wrapper.ibmmq;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
+import com.cisco.josouthe.wrapper.BaseWrapper;
 
-public class MQQueueWrapper extends BaseWrapper{
+public class MQQueueWrapper extends BaseWrapper {
     private IReflector close, getCurrentDepth, getMaximumDepth;
     private String name;
     private Integer options;
@@ -14,7 +15,7 @@ public class MQQueueWrapper extends BaseWrapper{
         this.options=options;
     }
 
-    protected void initMethods() {
+    public void initMethods() {
         getCurrentDepth = makeInvokeInstanceMethodReflector("getCurrentDepth");
         getMaximumDepth = makeInvokeInstanceMethodReflector("getMaximumDepth");
         close = makeInvokeInstanceMethodReflector("close");

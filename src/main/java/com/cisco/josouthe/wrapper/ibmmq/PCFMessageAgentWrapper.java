@@ -1,4 +1,4 @@
-package com.cisco.josouthe.wrapper;
+package com.cisco.josouthe.wrapper.ibmmq;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
@@ -6,12 +6,13 @@ import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException
 import com.cisco.josouthe.exception.MQErrorException;
 import com.cisco.josouthe.util.ExceptionUtility;
 import com.cisco.josouthe.exception.UserNotAuthorizedException;
+import com.cisco.josouthe.wrapper.BaseWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class PCFMessageAgentWrapper extends BaseWrapper{
+public class PCFMessageAgentWrapper extends BaseWrapper {
     private IReflector send;
     private IReflector constructor, setWaitInterval;
 

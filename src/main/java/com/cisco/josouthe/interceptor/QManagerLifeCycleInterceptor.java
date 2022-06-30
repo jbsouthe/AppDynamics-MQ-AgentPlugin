@@ -9,10 +9,10 @@ import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 import com.cisco.josouthe.monitor.BaseJMSMonitor;
 import com.cisco.josouthe.monitor.MQMonitor;
 import com.cisco.josouthe.monitor.Scheduler;
-import com.cisco.josouthe.wrapper.DestinationWrapper;
-import com.cisco.josouthe.wrapper.JmsConnectionFactoryWrapper;
-import com.cisco.josouthe.wrapper.JmsContextWrapper;
-import com.cisco.josouthe.wrapper.MQQueueManagerWrapper;
+import com.cisco.josouthe.wrapper.ibmmq.DestinationWrapper;
+import com.cisco.josouthe.wrapper.jms.JmsConnectionFactoryWrapper;
+import com.cisco.josouthe.wrapper.jms.JmsContextWrapper;
+import com.cisco.josouthe.wrapper.ibmmq.MQQueueManagerWrapper;
 import org.json.JSONArray;
 import org.json.JSONTokener;
 
@@ -166,6 +166,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
             JmsContextWrapper context = contextMap.get(returnVal.toString());
             getLogger().debug(String.format("JMS Provider Name: '%s'",context.getJMSProviderName()));
             switch (context.getJMSProviderName()) {
+                case "IBM Websphere":
                 case "IBM MQ JMS Provider": {
                     String key = String.format("%s:%s", context.getJMSProviderName(), connectionFactoryWrapper.getHostPortString());
                     if(! monitors.containsKey(key)) {

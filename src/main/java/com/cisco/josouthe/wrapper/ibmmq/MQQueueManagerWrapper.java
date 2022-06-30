@@ -1,15 +1,16 @@
-package com.cisco.josouthe.wrapper;
+package com.cisco.josouthe.wrapper.ibmmq;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
-import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.cisco.josouthe.util.ExceptionUtility;
 import com.cisco.josouthe.json.AuthenticationOverrideInfo;
+import com.cisco.josouthe.wrapper.BaseWrapper;
+import com.cisco.josouthe.wrapper.jms.JmsConnectionFactoryWrapper;
 
 import java.util.Hashtable;
 import java.util.Map;
 
-public class MQQueueManagerWrapper extends BaseWrapper{
+public class MQQueueManagerWrapper extends BaseWrapper {
 
     private String hostname, userID, password, queue, channel;
     private Integer port;
@@ -54,7 +55,7 @@ public class MQQueueManagerWrapper extends BaseWrapper{
         init(qMgrObject.getClass().getClassLoader());
     }
 
-    protected void initMethods() {
+    public void initMethods() {
         constructor = interceptor.getNewReflectionBuilder()
                 .createObject("com.ibm.mq.MQQueueManager", String.class.getCanonicalName(), Hashtable.class.getCanonicalName() )
                 .build();

@@ -1,6 +1,6 @@
 package com.cisco.josouthe.exception;
 
-import com.cisco.josouthe.wrapper.MQQueueManagerWrapper;
+import com.cisco.josouthe.wrapper.ibmmq.MQQueueManagerWrapper;
 
 public class UserNotAuthorizedException extends Throwable {
     public String hostnamne, userID, queueManagerName, channel;

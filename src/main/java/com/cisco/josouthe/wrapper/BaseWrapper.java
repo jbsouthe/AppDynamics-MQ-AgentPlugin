@@ -24,7 +24,7 @@ public abstract class BaseWrapper {
         initMethods();
     }
 
-    abstract void initMethods();
+    public abstract void initMethods();
 
     public Boolean matches( Object otherObject ) {
         if( otherObject == null ) return false;
