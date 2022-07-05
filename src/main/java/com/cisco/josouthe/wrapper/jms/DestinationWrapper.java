@@ -1,11 +1,11 @@
-package com.cisco.josouthe.wrapper.ibmmq;
+package com.cisco.josouthe.wrapper.jms;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.ReflectorException;
 import com.cisco.josouthe.wrapper.BaseWrapper;
 
-public class DestinationWrapper extends BaseWrapper {
+public class DestinationWrapper extends BaseWrapper { //javax.jms.Destination loosely with some helpers
     private IReflector getQueueName, getTopicName, toString;
     private boolean typeIsQueue = false;
     private boolean typeIsTopic = false;

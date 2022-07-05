@@ -9,7 +9,7 @@ import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 import com.cisco.josouthe.monitor.BaseJMSMonitor;
 import com.cisco.josouthe.monitor.MQMonitor;
 import com.cisco.josouthe.monitor.Scheduler;
-import com.cisco.josouthe.wrapper.ibmmq.DestinationWrapper;
+import com.cisco.josouthe.wrapper.jms.DestinationWrapper;
 import com.cisco.josouthe.wrapper.jms.JmsConnectionFactoryWrapper;
 import com.cisco.josouthe.wrapper.jms.JmsContextWrapper;
 import com.cisco.josouthe.wrapper.ibmmq.MQQueueManagerWrapper;
