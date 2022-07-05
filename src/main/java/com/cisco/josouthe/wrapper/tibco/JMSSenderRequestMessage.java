@@ -5,7 +5,7 @@ import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.cisco.josouthe.wrapper.BaseWrapper;
 
 public class JMSSenderRequestMessage extends BaseWrapper { //com.tibco.plugin.jms.service.JMSSenderRequestMessage
-    private IReflector getDeliveryMode, getPriority, getType, getStringProperty, getIntProperty, getDestinationName, getMessageBodyAsString, getReplyToName, getCorrelationId;
+    private IReflector getDeliveryMode, getPriority, getType, getStringProperty, getIntProperty, getDestinationName, getMessageBodyAsString, getReplyToName;
 
     public JMSSenderRequestMessage(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
         super(aGenericInterceptor, objectToWrap, parentObject);
@@ -21,7 +21,6 @@ public class JMSSenderRequestMessage extends BaseWrapper { //com.tibco.plugin.jm
         getDestinationName = interceptor.getNewReflectionBuilder().invokeInstanceMethod("getDestinationName", true).build(); //String
         getMessageBodyAsString = interceptor.getNewReflectionBuilder().invokeInstanceMethod("getMessageBodyAsString", true).build(); //String
         getReplyToName = interceptor.getNewReflectionBuilder().invokeInstanceMethod("getReplyToName", true).build(); //String
-        getCorrelationId = interceptor.getNewReflectionBuilder().invokeInstanceMethod("getCorrelationId", true).build(); //String
     }
 
     public int getDeliveryMode() { return getReflectiveInteger(getDeliveryMode, 0); }
@@ -61,9 +60,8 @@ public class JMSSenderRequestMessage extends BaseWrapper { //com.tibco.plugin.jm
     public String getDestinationName() { return (String) getReflectiveObject(getDestinationName); }
     public String getMessageBodyAsString() { return (String) getReflectiveObject(getMessageBodyAsString); }
     public String getReplyToName() { return (String) getReflectiveObject(getReplyToName); }
-    public String getCorrelationId() { return (String) getReflectiveObject(getCorrelationId); }
 
     public String toString() {
-        return String.format("Destination: %s Type: %s Message Body: '%s' Correlation Id: %s", getDestinationName(), getType(), getMessageBodyAsString(), getCorrelationId());
+        return String.format("Destination: %s Type: %s Message Body: '%s'", getDestinationName(), getType(), getMessageBodyAsString());
     }
 }
