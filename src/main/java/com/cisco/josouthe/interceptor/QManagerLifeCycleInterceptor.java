@@ -9,10 +9,12 @@ import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 import com.cisco.josouthe.monitor.BaseJMSMonitor;
 import com.cisco.josouthe.monitor.MQMonitor;
 import com.cisco.josouthe.monitor.Scheduler;
+import com.cisco.josouthe.monitor.TibcoMonitor;
 import com.cisco.josouthe.wrapper.jms.DestinationWrapper;
 import com.cisco.josouthe.wrapper.jms.JmsConnectionFactoryWrapper;
 import com.cisco.josouthe.wrapper.jms.JmsContextWrapper;
 import com.cisco.josouthe.wrapper.ibmmq.MQQueueManagerWrapper;
+import com.cisco.josouthe.wrapper.jms.Message;
 import com.cisco.josouthe.wrapper.tibco.*;
 import org.json.JSONArray;
 import org.json.JSONTokener;
@@ -33,7 +35,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
     private Scheduler scheduler = null;
     //ConcurrentHashMap<Object, JmsConnectionFactoryWrapper> connectionFactoryObjectMap = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, JmsConnectionFactoryWrapper> connectionFactoryHostMap = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, JmsContextWrapper> contextMap = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, Object> contextMap = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, BaseJMSMonitor> monitors = new ConcurrentHashMap<>();
     ConcurrentHashMap<String, AuthenticationOverrideInfo> authentications = new ConcurrentHashMap<>();
     ConcurrentHashMap<Object, Object> producerContextMap = new ConcurrentHashMap<>();
@@ -86,7 +88,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
          */
 
         if( methodName.equals("close") ) {
-            JmsContextWrapper context = contextMap.remove(objectIntercepted.toString());
+            JmsContextWrapper context = (JmsContextWrapper) contextMap.remove(objectIntercepted.toString());
             if( context != null ) {
                 JmsConnectionFactoryWrapper jmsConnectionFactoryWrapper = connectionFactoryHostMap.get(context.getConnectionName());
                 if( jmsConnectionFactoryWrapper != null )
@@ -141,60 +143,102 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
             }
         }
 
-        if( methodName.equals("createQueue") ) {
-            String queueName = (String) params[0];
-            JmsContextWrapper context = getJmsContextWrapper(objectIntercepted);
-            context.addQueue(queueName);
-            addToMonitor(context, queueName, null);
+        if( methodName.equals("<init>") && className.equals("com.tibco.tibjms.naming.TibjmsContext") )  {
+            TibjmsContext tibjmsContext = new TibjmsContext(this, objectIntercepted, null);
+            String contextName = (String) params[0];
+            Hashtable jmsConnectionMap = (Hashtable) params[1];
+            getLogger().debug(String.format("%s.%s context connection name: %s  string arg: %s hashtable: %s", className, methodName, tibjmsContext.getReference(), contextName, jmsConnectionMap));
         }
 
-        if( methodName.equals("createTopic") ) {
-            String topicName = (String) params[0];
-            JmsContextWrapper context = getJmsContextWrapper(objectIntercepted);
-            addToMonitor(context, null, topicName);
-        }
-
-        if( methodName.equals("createConsumer") || methodName.equals("createDurableConsumer") || methodName.equals("createSharedConsumer") || methodName.equals("createSharedDurableConsumer") ) {
-            JmsContextWrapper context = getJmsContextWrapper(objectIntercepted);
-            DestinationWrapper destination = new DestinationWrapper( this, params[0], context);
-            addToMonitor(context, destination);
-        }
-
-        if( methodName.equals("createContext") ) {
-            JmsConnectionFactoryWrapper connectionFactoryWrapper = new JmsConnectionFactoryWrapper(this, objectIntercepted);
-            if( ! connectionFactoryHostMap.containsKey(connectionFactoryWrapper.getHostPortString())) {
-                connectionFactoryHostMap.put(connectionFactoryWrapper.getHostPortString(), connectionFactoryWrapper);
+        if( className.contains("tibco") ) {
+            if (methodName.equals("createQueue")) {
+                String queueName = (String) params[0];
+                TibjmsContext context = getTibJmsContextWrapper(objectIntercepted);
+                addToMonitor(context, queueName, null);
             }
-            connectionFactoryHostMap.put(connectionFactoryWrapper.getHostPortString(), connectionFactoryWrapper);
-            getLogger().debug(String.format("Connection Factory Intercepted for host: %s channel: %s app: %s qmgr: %s"
-                    ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_HOST_NAME")
-                    ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_CHANNEL")
-                    ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_APPNAME")
-                    ,connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER")
-            ));
-            if( ! contextMap.containsKey(returnVal.toString()) ) {
-                contextMap.put(returnVal.toString(), new JmsContextWrapper(this, returnVal, objectIntercepted));
+            if (methodName.equals("createTopic")) {
+                String topicName = (String) params[0];
+                TibjmsContext context = getTibJmsContextWrapper(objectIntercepted);
+                addToMonitor(context, null, topicName);
+            }
+            if (methodName.equals("createConsumer") || methodName.equals("createDurableConsumer") || methodName.equals("createSharedConsumer") || methodName.equals("createSharedDurableConsumer")) {
+                TibjmsContext context = getTibJmsContextWrapper(objectIntercepted);
+                DestinationWrapper destination = new DestinationWrapper(this, params[0], context);
+                addToMonitor(context, destination);
+            }
+            if (methodName.equals("createMessage")) {
+                TibjmsContext context = getTibJmsContextWrapper(objectIntercepted);
+                Message message = new Message(this, returnVal, context.getObject());
+                addToMonitor(context, message.getJMSDestination());
+            }
+        } else {
+            if (methodName.equals("createQueue")) {
+                String queueName = (String) params[0];
+                JmsContextWrapper context = getJmsContextWrapper(objectIntercepted);
+                context.addQueue(queueName);
+                addToMonitor(context, queueName, null);
             }
 
-            JmsContextWrapper context = contextMap.get(returnVal.toString());
-            getLogger().debug(String.format("JMS Provider Name: '%s'",context.getJMSProviderName()));
-            switch (context.getJMSProviderName()) {
-                case "IBM Websphere":
-                case "IBM MQ JMS Provider": {
-                    String key = String.format("%s:%s", context.getJMSProviderName(), connectionFactoryWrapper.getHostPortString());
-                    if(! monitors.containsKey(key)) {
-                        AuthenticationOverrideInfo authenticationOverrideInfo = authentications.get(key);
-                        if( authenticationOverrideInfo == null && defaultAuthenticationOverrideInfo != null )
-                            authenticationOverrideInfo = defaultAuthenticationOverrideInfo;
-                        monitors.put(key, new MQMonitor(this, key, "IBM MQ JMS", new MQQueueManagerWrapper(this, connectionFactoryWrapper, authenticationOverrideInfo) ));
+            if (methodName.equals("createTopic")) {
+                String topicName = (String) params[0];
+                JmsContextWrapper context = getJmsContextWrapper(objectIntercepted);
+                addToMonitor(context, null, topicName);
+            }
+
+            if (methodName.equals("createConsumer") || methodName.equals("createDurableConsumer") || methodName.equals("createSharedConsumer") || methodName.equals("createSharedDurableConsumer")) {
+                JmsContextWrapper context = getJmsContextWrapper(objectIntercepted);
+                DestinationWrapper destination = new DestinationWrapper(this, params[0], context);
+                addToMonitor(context, destination);
+            }
+
+            if (methodName.equals("createContext")) {
+                if( className.contains("ibm") ) {
+                    JmsConnectionFactoryWrapper connectionFactoryWrapper = new JmsConnectionFactoryWrapper(this, objectIntercepted);
+                    if (!connectionFactoryHostMap.containsKey(connectionFactoryWrapper.getHostPortString())) {
+                        connectionFactoryHostMap.put(connectionFactoryWrapper.getHostPortString(), connectionFactoryWrapper);
                     }
-                    break;
+                    connectionFactoryHostMap.put(connectionFactoryWrapper.getHostPortString(), connectionFactoryWrapper);
+                    getLogger().debug(String.format("Connection Factory Intercepted for host: %s channel: %s app: %s qmgr: %s"
+                            , connectionFactoryWrapper.getStringProperty("XMSC_WMQ_HOST_NAME")
+                            , connectionFactoryWrapper.getStringProperty("XMSC_WMQ_CHANNEL")
+                            , connectionFactoryWrapper.getStringProperty("XMSC_WMQ_APPNAME")
+                            , connectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER")
+                    ));
+                    if (!contextMap.containsKey(returnVal.toString())) {
+                        contextMap.put(returnVal.toString(), new JmsContextWrapper(this, returnVal, objectIntercepted));
+                    }
+
+                    JmsContextWrapper context = (JmsContextWrapper) contextMap.get(returnVal.toString());
+                    getLogger().debug(String.format("JMS Provider Name: '%s'", context.getJMSProviderName()));
+                    switch (context.getJMSProviderName()) {
+                        case "IBM Websphere":
+                        case "IBM MQ JMS Provider": {
+                            String key = String.format("%s:%s", context.getJMSProviderName(), connectionFactoryWrapper.getHostPortString());
+                            if (!monitors.containsKey(key)) {
+                                AuthenticationOverrideInfo authenticationOverrideInfo = authentications.get(key);
+                                if (authenticationOverrideInfo == null && defaultAuthenticationOverrideInfo != null)
+                                    authenticationOverrideInfo = defaultAuthenticationOverrideInfo;
+                                monitors.put(key, new MQMonitor(this, key, "IBM MQ JMS", new MQQueueManagerWrapper(this, connectionFactoryWrapper, authenticationOverrideInfo)));
+                            }
+                            break;
+                        }
+                        default:
+                            getLogger().debug(String.format("Ignoring this JMS Provider, because it is not currently supported. name: '%s'", context.getJMSProviderName()));
+                    }
+                    connectionFactoryWrapper.addContext(context);
+                    context.setConnectionName(connectionFactoryWrapper.getHostPortString());
                 }
-                default: getLogger().debug(String.format("Ignoring this JMS Provider, because it is not currently supported. name: '%s'",context.getJMSProviderName()));
+                if( className.contains("tibco") ) {
+                    TibjmsContext tibjmsContext = new TibjmsContext(this, returnVal, objectIntercepted);
+                    if( getMonitor(tibjmsContext) == null ) {
+                        AuthenticationOverrideInfo authenticationOverrideInfo = authentications.get(tibjmsContext.getConnection().getURLsString()); //TODO need real key, this will never probably return
+                        if (authenticationOverrideInfo == null && defaultAuthenticationOverrideInfo != null)
+                            authenticationOverrideInfo = defaultAuthenticationOverrideInfo;
+                        monitors.put(tibjmsContext.getConnection().getURLsString(), new TibcoMonitor(this, tibjmsContext.getConnection().getURLsString(), tibjmsContext.getConnection()));
+                    }
+                }
+                initializeScheduler();
             }
-            initializeScheduler();
-            connectionFactoryWrapper.addContext(context);
-            context.setConnectionName(connectionFactoryWrapper.getHostPortString());
         }
 
         /*
@@ -263,30 +307,39 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
 
     }
 
-    private void addToMonitor( JmsContextWrapper context, DestinationWrapper destination ) {
+    private void addToMonitor( Object context, DestinationWrapper destination ) {
         if( destination.isQueue() )
             addToMonitor(context, destination.getName(), null);
         if( destination.isTopic() )
             addToMonitor(context, null, destination.getName());
     }
 
-    private void addToMonitor(JmsContextWrapper context, String queueName, String topicName ) {
-        if( context.getConnectionName() != null && connectionFactoryHostMap.containsKey(context.getConnectionName())) {
-            BaseJMSMonitor jmsMonitor = getMonitor(context);
-            String channelName = getChannelName(context);
-            if( jmsMonitor != null ) {
-                if( channelName != null ) jmsMonitor.addChannel(channelName);
-                if( queueName != null ) {
-                    jmsMonitor.addQueue(queueName);
-                    getLogger().debug(String.format("Added Queue '%s' to Monitor for '%s'", queueName, jmsMonitor.toString()));
-                }
-                if( topicName != null ) {
-                    jmsMonitor.addTopic( topicName );
-                    getLogger().debug(String.format("Added Topic '%s' to Monitor for '%s'", topicName, jmsMonitor.toString()));
-                }
+    private void addToMonitor(Object contextObject, String queueName, String topicName ) {
+        BaseJMSMonitor jmsMonitor = null;
+        String channelName = null;
+        if( contextObject instanceof JmsContextWrapper ) {
+            JmsContextWrapper context = (JmsContextWrapper) contextObject;
+            if (context.getConnectionName() != null && connectionFactoryHostMap.containsKey(context.getConnectionName())) {
+                jmsMonitor = getMonitor(context);
+                channelName = getChannelName(context);
+            } else {
+                getLogger().debug(String.format("Connection not found for this object: %s", context.getConnectionName()));
             }
-        } else {
-            getLogger().debug(String.format("Connection not found for this object: %s", context.getConnectionName()));
+        }
+        if( contextObject instanceof TibjmsContext ) {
+            TibjmsContext context = (TibjmsContext) contextObject;
+            jmsMonitor = getMonitor(contextObject);
+        }
+        if (jmsMonitor != null) {
+            if (channelName != null) jmsMonitor.addChannel(channelName);
+            if (queueName != null) {
+                jmsMonitor.addQueue(queueName);
+                getLogger().debug(String.format("Added Queue '%s' to Monitor for '%s'", queueName, jmsMonitor.toString()));
+            }
+            if (topicName != null) {
+                jmsMonitor.addTopic(topicName);
+                getLogger().debug(String.format("Added Topic '%s' to Monitor for '%s'", topicName, jmsMonitor.toString()));
+            }
         }
     }
 
@@ -294,13 +347,30 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
         return String.format("IBM MQ JMS Provider:%s:%d", String.valueOf(properties.get("hostname")), Integer.valueOf(String.valueOf(properties.get("port"))) );
     }
 
-    private BaseJMSMonitor getMonitor( JmsContextWrapper context ) {
-        String key = String.format("%s:%s", context.getJMSProviderName(), context.getConnectionName());
+    private BaseJMSMonitor getMonitor( Object contextObject ) {
+        String key = "";
+        if( contextObject instanceof JmsContextWrapper) {
+            JmsContextWrapper context = (JmsContextWrapper) contextObject;
+            key = String.format("%s:%s", context.getJMSProviderName(), context.getConnectionName());
+        }
+        if( contextObject instanceof TibjmsContext) {
+            TibjmsContext context = (TibjmsContext) contextObject;
+            key = context.getConnection().getURLsString();
+        }
         return monitors.get(key);
     }
 
+    private TibjmsContext getTibJmsContextWrapper( Object objectIntercepted) {
+        TibjmsContext context = (TibjmsContext) contextMap.get(objectIntercepted.toString());
+        if( context == null ) {
+            context = new TibjmsContext(this, objectIntercepted, null);
+            contextMap.put(objectIntercepted.toString(), context);
+        }
+        return context;
+    }
+
     private JmsContextWrapper getJmsContextWrapper(Object objectIntercepted) {
-        JmsContextWrapper context = contextMap.get(objectIntercepted.toString());
+        JmsContextWrapper context = (JmsContextWrapper) contextMap.get(objectIntercepted.toString());
         if( context == null ) {
             context = new JmsContextWrapper(this, objectIntercepted, null);
             contextMap.put(objectIntercepted.toString(), context);
@@ -351,7 +421,7 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 .methodMatchString("createConnectionFactory")
                 .methodStringMatchType(SDKStringMatchType.EQUALS)
                 .build());
-        rules.add( new Rule.Builder("com.ibm.msg.client.jms.JmsConnectionFactory")
+        rules.add( new Rule.Builder("javax.jms.ConnectionFactory")
                 .classMatchType(SDKClassMatchType.IMPLEMENTS_INTERFACE)
                 .methodMatchString("createContext")
                 .methodStringMatchType(SDKStringMatchType.EQUALS)
@@ -376,6 +446,11 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 .classMatchType(SDKClassMatchType.MATCHES_CLASS)
                 .methodMatchString("send")
                 .methodStringMatchType(SDKStringMatchType.EQUALS)
+                .build());
+        rules.add( new Rule.Builder("com.tibco.tibjms.TibjmsJMSContext")
+                .classMatchType(SDKClassMatchType.MATCHES_CLASS)
+                .methodMatchString("create")
+                .methodStringMatchType(SDKStringMatchType.STARTSWITH)
                 .build());
         return rules;
     }

@@ -6,7 +6,7 @@ import com.cisco.josouthe.wrapper.BaseWrapper;
 
 public class JMSSender extends BaseWrapper { //com.tibco.plugin.share.jms.impl.JMSSender
 
-    IReflector getConfiguration;
+    IReflector getConfiguration, getSession;
 
     public JMSSender(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
         super(aGenericInterceptor, objectToWrap, parentObject);
@@ -15,6 +15,7 @@ public class JMSSender extends BaseWrapper { //com.tibco.plugin.share.jms.impl.J
     @Override
     public void initMethods() {
         getConfiguration = interceptor.getNewReflectionBuilder().invokeInstanceMethod("getConfiguration", true).build();
+        getSession = interceptor.getNewReflectionBuilder().invokeInstanceMethod("getSession", true).build();
     }
 
     public SenderConfiguration getConfiguration() {
