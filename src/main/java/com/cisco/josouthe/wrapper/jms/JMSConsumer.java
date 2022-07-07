@@ -4,8 +4,8 @@ import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.cisco.josouthe.wrapper.BaseWrapper;
 
-public class JmsConsumerWrapper extends BaseWrapper {
-    public JmsConsumerWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
+public class JMSConsumer extends BaseWrapper {
+    public JMSConsumer(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
         super(aGenericInterceptor, objectToWrap, parentObject);
     }
     public void initMethods() {}

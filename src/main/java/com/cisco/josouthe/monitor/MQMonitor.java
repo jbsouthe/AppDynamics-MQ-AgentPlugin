@@ -4,27 +4,27 @@ import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.cisco.josouthe.exception.UserNotAuthorizedException;
 import com.cisco.josouthe.util.ExceptionUtility;
 import com.cisco.josouthe.util.MQConstants;
-import com.cisco.josouthe.wrapper.ibmmq.MQQueueManagerWrapper;
-import com.cisco.josouthe.wrapper.ibmmq.MQQueueWrapper;
-import com.cisco.josouthe.wrapper.ibmmq.PCFMessageAgentWrapper;
-import com.cisco.josouthe.wrapper.ibmmq.PCFMessageWrapper;
+import com.cisco.josouthe.wrapper.ibmmq.MQQueueManager;
+import com.cisco.josouthe.wrapper.ibmmq.MQQueue;
+import com.cisco.josouthe.wrapper.ibmmq.PCFMessageAgent;
+import com.cisco.josouthe.wrapper.ibmmq.PCFMessage;
 
 import java.net.URI;
 import java.text.ParseException;
 import java.util.*;
 
 public class MQMonitor extends BaseJMSMonitor {
-    private MQQueueManagerWrapper mqQueueManager;
-    private PCFMessageAgentWrapper agent;
+    private MQQueueManager mqQueueManager;
+    private PCFMessageAgent agent;
     private ClassLoader interceptedClassLoader;
     private String providerName;
 
-    public MQMonitor(ASDKPlugin aGenericInterceptor, String key, String providerName, MQQueueManagerWrapper mqQueueManagerWrapper) {
+    public MQMonitor(ASDKPlugin aGenericInterceptor, String key, String providerName, MQQueueManager mqQueueManager) {
         super(aGenericInterceptor, key);
         this.providerName=providerName;
-        mqQueueManager = mqQueueManagerWrapper;
+        this.mqQueueManager = mqQueueManager;
         try {
-            agent = new PCFMessageAgentWrapper(aGenericInterceptor, mqQueueManager );
+            agent = new PCFMessageAgent(aGenericInterceptor, this.mqQueueManager);
         } catch (UserNotAuthorizedException e) {
             logger.info(String.format("Error creating PCFMessageAgent, %s", e.toString()));
         }
@@ -56,10 +56,10 @@ public class MQMonitor extends BaseJMSMonitor {
     }
 
     private void reportTopicStatus(Set<String> topicNames ) {
-        PCFMessageWrapper request = new PCFMessageWrapper(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("MQCMD_INQUIRE_TOPIC_STATUS"));
+        PCFMessage request = new PCFMessage(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("MQCMD_INQUIRE_TOPIC_STATUS"));
         request.addParameter(MQConstants.getIntFromConstant("MQCA_TOPIC_STRING"), "#"); //com.ibm.mq.constants.CMQC.MQCA_TOPIC_STRING=2094
-        List<PCFMessageWrapper> responses = agent.send(request);
-        for (PCFMessageWrapper response : responses) {
+        List<PCFMessage> responses = agent.send(request);
+        for (PCFMessage response : responses) {
             logger.trace(String.format("Response %s", response.toString()));
             String topicName = response.getStringParameterValue("MQCA_ADMIN_TOPIC_NAME");
             String topicString = response.getStringParameterValue("MQCA_TOPIC_STRING");
@@ -73,10 +73,10 @@ public class MQMonitor extends BaseJMSMonitor {
     }
 
     private void reportChannelStatus( String channelName ) {
-        PCFMessageWrapper request = new PCFMessageWrapper(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS"));
+        PCFMessage request = new PCFMessage(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("CMQCFC.MQCMD_INQUIRE_CHANNEL_STATUS"));
         request.addParameter(MQConstants.getIntFromConstant("CMQCFC.MQCACH_CHANNEL_NAME"), channelName);
-        List<PCFMessageWrapper> responses = agent.send(request);
-        for (PCFMessageWrapper response : responses) {
+        List<PCFMessage> responses = agent.send(request);
+        for (PCFMessage response : responses) {
             logger.trace(String.format("Response %s", response.toString()));
             int bytesSent = response.getIntParameterValue("MQIACH_BYTES_SENT");
             reportMetric(String.format("%s|%s|Channel|%s|Bytes Sent", this.providerName, mqQueueManager.getName(), channelName), bytesSent, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
@@ -93,7 +93,7 @@ public class MQMonitor extends BaseJMSMonitor {
 
     private void reportQueueDepth(String shortQueueName) {
         try {
-            MQQueueWrapper mqQueueWrapper = mqQueueManager.accessQueue(shortQueueName, 8226);
+            MQQueue mqQueueWrapper = mqQueueManager.accessQueue(shortQueueName, 8226);
             logger.debug(String.format("MQQueue destQueue = qMgr.accessQueue(qName, openOptions);"));
             int depthCurrent = mqQueueWrapper.getCurrentDepth();
             logger.debug(String.format("int %d = destQueue.getCurrentDepth();", depthCurrent));
@@ -110,11 +110,11 @@ public class MQMonitor extends BaseJMSMonitor {
     }
 
     private void reportQueueStatus(String shortQueueName) {
-        PCFMessageWrapper request = new PCFMessageWrapper(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("CMQCFC.MQCMD_INQUIRE_Q_STATUS"));
+        PCFMessage request = new PCFMessage(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("CMQCFC.MQCMD_INQUIRE_Q_STATUS"));
         request.addParameter( MQConstants.getIntFromConstant("MQCA_Q_NAME"), shortQueueName);
         request.addParameter( MQConstants.getIntFromConstant("CMQCFC.MQIACF_Q_STATUS_ATTRS"), new Integer[]{ MQConstants.getIntFromConstant("CMQCFC.MQIACF_ALL") });
-        List<PCFMessageWrapper> responses = agent.send(request);
-        for( PCFMessageWrapper response : responses ) {
+        List<PCFMessage> responses = agent.send(request);
+        for( PCFMessage response : responses ) {
             logger.trace(String.format("Response %s", response.toString()));
             int curQFileSize = response.getIntParameterValue("MQIACF_CUR_Q_FILE_SIZE");
             reportMetric(String.format("%s|%s|%s|Current Queue File Size", this.providerName, mqQueueManager.getName(), shortQueueName), curQFileSize, "OBSERVATION", "AVERAGE", "INDIVIDUAL");
@@ -145,11 +145,11 @@ public class MQMonitor extends BaseJMSMonitor {
     }
 
     private void reportQueueManagerStatus() {
-        PCFMessageWrapper request = new PCFMessageWrapper(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS"));
+        PCFMessage request = new PCFMessage(this.interceptor, agent.getObject(), MQConstants.getIntFromConstant("CMQCFC.MQCMD_INQUIRE_Q_MGR_STATUS"));
         request.addParameter(MQConstants.getIntFromConstant("CMQCFC.MQIACF_Q_MGR_STATUS_ATTRS"),
                 new Integer[] { MQConstants.getIntFromConstant("CMQCFC.MQIACF_ALL") });
-        List<PCFMessageWrapper> responses = agent.send( request );
-        for( PCFMessageWrapper response : responses ) {
+        List<PCFMessage> responses = agent.send( request );
+        for( PCFMessage response : responses ) {
             logger.trace(String.format("Response %s", response.toString()));
             int status = response.getIntParameterValue( "MQIACF_Q_MGR_STATUS" );
             logger.trace(String.format("MQIACF_Q_MGR_STATUS=%d",status));

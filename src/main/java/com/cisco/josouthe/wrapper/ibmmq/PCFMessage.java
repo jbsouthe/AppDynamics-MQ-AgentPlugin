@@ -8,10 +8,10 @@ import com.cisco.josouthe.wrapper.BaseWrapper;
 
 import java.util.Arrays;
 
-public class PCFMessageWrapper extends BaseWrapper {
+public class PCFMessage extends BaseWrapper {
     private IReflector addParameterIntArray, addParameterString, getIntParameterValue, constructor, getStringParameterValue, toString;
 
-    public PCFMessageWrapper(ASDKPlugin aGenericInterceptor, Object parentObject, Integer creationOptions) {
+    public PCFMessage(ASDKPlugin aGenericInterceptor, Object parentObject, Integer creationOptions) {
         super(aGenericInterceptor, null, parentObject);
         try{
             this.object = constructor.execute( parentObject.getClass().getClassLoader(), null, new Object[] { creationOptions } );
@@ -21,7 +21,7 @@ public class PCFMessageWrapper extends BaseWrapper {
         }
     }
 
-    public PCFMessageWrapper(ASDKPlugin aGenericInterceptor, Object message, Object parentObject ) {
+    public PCFMessage(ASDKPlugin aGenericInterceptor, Object message, Object parentObject ) {
         super(aGenericInterceptor, message, parentObject);
         initMethods();
         logger.debug(String.format("Initialized IBM MQ PCFMessage from object: %s", message.toString()));

@@ -4,12 +4,12 @@ import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.cisco.josouthe.wrapper.BaseWrapper;
 
-public class MQQueueWrapper extends BaseWrapper {
+public class MQQueue extends BaseWrapper {
     private IReflector close, getCurrentDepth, getMaximumDepth;
     private String name;
     private Integer options;
 
-    public MQQueueWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject, String name, Integer options) {
+    public MQQueue(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject, String name, Integer options) {
         super(aGenericInterceptor, objectToWrap, parentObject);
         this.name=name;
         this.options=options;

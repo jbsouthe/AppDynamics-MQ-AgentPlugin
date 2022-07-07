@@ -16,9 +16,9 @@ public class Message extends BaseWrapper { //https://docs.oracle.com/javaee/7/ap
         getJMSDestination = makeInvokeInstanceMethodReflector("getJMSDestination");
     }
 
-    public DestinationWrapper getJMSDestination() {
+    public Destination getJMSDestination() {
         Object destinationObject = getReflectiveObject(getJMSDestination);
-        return new DestinationWrapper(this.interceptor, destinationObject, this);
+        return new Destination(this.interceptor, destinationObject, this);
     }
 
 

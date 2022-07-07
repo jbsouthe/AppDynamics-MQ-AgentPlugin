@@ -5,18 +5,18 @@ import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.cisco.josouthe.util.ExceptionUtility;
 import com.cisco.josouthe.json.AuthenticationOverrideInfo;
 import com.cisco.josouthe.wrapper.BaseWrapper;
-import com.cisco.josouthe.wrapper.jms.JmsConnectionFactoryWrapper;
+import com.cisco.josouthe.wrapper.jms.JmsConnectionFactory;
 
 import java.util.Hashtable;
 import java.util.Map;
 
-public class MQQueueManagerWrapper extends BaseWrapper {
+public class MQQueueManager extends BaseWrapper {
 
     private String hostname, userID, password, queue, channel;
     private Integer port;
     private IReflector constructor, accessQueue, accessQueueWithOptions;
 
-    public MQQueueManagerWrapper(ASDKPlugin asdkPlugin, String qMgrName, Map<String,Object> connectionPropertiesMap ) { //for Junit
+    public MQQueueManager(ASDKPlugin asdkPlugin, String qMgrName, Map<String,Object> connectionPropertiesMap ) { //for Junit
         super(asdkPlugin,null, null);
         this.queue = qMgrName;
         this.hostname = (String) connectionPropertiesMap.get("hostname");
@@ -27,21 +27,21 @@ public class MQQueueManagerWrapper extends BaseWrapper {
         init( this.getClass().getClassLoader());
     }
 
-    public MQQueueManagerWrapper(ASDKPlugin aGenericInterceptor, JmsConnectionFactoryWrapper jmsConnectionFactoryWrapper, AuthenticationOverrideInfo authenticationOverrideInfo) {
+    public MQQueueManager(ASDKPlugin aGenericInterceptor, JmsConnectionFactory jmsConnectionFactory, AuthenticationOverrideInfo authenticationOverrideInfo) {
         super(aGenericInterceptor, null, null);
-        hostname = jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_HOST_NAME");
-        port = jmsConnectionFactoryWrapper.getIntProperty("XMSC_WMQ_PORT");
-        queue = jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_QUEUE_MANAGER");
-        channel = jmsConnectionFactoryWrapper.getStringProperty("XMSC_WMQ_CHANNEL");
+        hostname = jmsConnectionFactory.getStringProperty("XMSC_WMQ_HOST_NAME");
+        port = jmsConnectionFactory.getIntProperty("XMSC_WMQ_PORT");
+        queue = jmsConnectionFactory.getStringProperty("XMSC_WMQ_QUEUE_MANAGER");
+        channel = jmsConnectionFactory.getStringProperty("XMSC_WMQ_CHANNEL");
         if( authenticationOverrideInfo != null && authenticationOverrideInfo.channel != null ) channel=authenticationOverrideInfo.channel;
-        userID = jmsConnectionFactoryWrapper.getStringProperty("XMSC_USERID");
+        userID = jmsConnectionFactory.getStringProperty("XMSC_USERID");
         if( authenticationOverrideInfo != null && authenticationOverrideInfo.userID != null ) userID=authenticationOverrideInfo.userID;
-        password = jmsConnectionFactoryWrapper.getStringProperty("XMSC_PASSWORD");
+        password = jmsConnectionFactory.getStringProperty("XMSC_PASSWORD");
         if( authenticationOverrideInfo != null && authenticationOverrideInfo.password != null ) password=authenticationOverrideInfo.password;
-        init(jmsConnectionFactoryWrapper.getObject().getClass().getClassLoader());
+        init(jmsConnectionFactory.getObject().getClass().getClassLoader());
     }
 
-    public MQQueueManagerWrapper( ASDKPlugin aGenericInterceptor, Object qMgrObject, String qMgrName, Hashtable properties, AuthenticationOverrideInfo authenticationOverrideInfo ) {
+    public MQQueueManager(ASDKPlugin aGenericInterceptor, Object qMgrObject, String qMgrName, Hashtable properties, AuthenticationOverrideInfo authenticationOverrideInfo ) {
         super(aGenericInterceptor, null, null);
         queue= qMgrName;
         hostname = String.valueOf(properties.get("hostname"));
@@ -63,16 +63,16 @@ public class MQQueueManagerWrapper extends BaseWrapper {
         accessQueueWithOptions= makeInvokeInstanceMethodReflector("accessQueue", String.class.getCanonicalName(), int.class.getCanonicalName());
     }
 
-    public MQQueueWrapper accessQueue( String name ) {
+    public MQQueue accessQueue(String name ) {
         logger.debug(String.format("accessQueue('%s')", name));
         Object mqQueueObject = getReflectiveObject(this.object, accessQueue, name);
-        return new MQQueueWrapper(this.interceptor, mqQueueObject, this.object, name, null);
+        return new MQQueue(this.interceptor, mqQueueObject, this.object, name, null);
     }
 
-    public MQQueueWrapper accessQueue(String name, int options) {
+    public MQQueue accessQueue(String name, int options) {
         logger.debug(String.format("accessQueue('%s', %d)", name, options));
         Object mqQueueObject = getReflectiveObject(this.object, accessQueueWithOptions, name, options);
-        return new MQQueueWrapper(this.interceptor, mqQueueObject, this.object, name, options);
+        return new MQQueue(this.interceptor, mqQueueObject, this.object, name, options);
     }
 
     public void init( ClassLoader classLoader ) {

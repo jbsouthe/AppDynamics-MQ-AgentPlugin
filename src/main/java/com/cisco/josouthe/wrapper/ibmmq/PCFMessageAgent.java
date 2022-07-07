@@ -12,11 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class PCFMessageAgentWrapper extends BaseWrapper {
+public class PCFMessageAgent extends BaseWrapper {
     private IReflector send;
     private IReflector constructor, setWaitInterval;
 
-    public PCFMessageAgentWrapper(ASDKPlugin aGenericInterceptor, MQQueueManagerWrapper mqQueueManager) throws UserNotAuthorizedException {
+    public PCFMessageAgent(ASDKPlugin aGenericInterceptor, MQQueueManager mqQueueManager) throws UserNotAuthorizedException {
         super(aGenericInterceptor, null, mqQueueManager.getObject());
         try{
             this.object = constructor.execute( mqQueueManager.getObject().getClass().getClassLoader(), null, new Object[] { mqQueueManager.getObject() } );
@@ -61,12 +61,12 @@ public class PCFMessageAgentWrapper extends BaseWrapper {
         }
     }
 
-    public List<PCFMessageWrapper> send( PCFMessageWrapper request ) {
+    public List<PCFMessage> send(PCFMessage request ) {
         return send( request.getObject() );
     }
 
-    public List<PCFMessageWrapper> send( Object request ) {
-        List<PCFMessageWrapper> responses = new ArrayList<>();
+    public List<PCFMessage> send(Object request ) {
+        List<PCFMessage> responses = new ArrayList<>();
         long startTime = System.currentTimeMillis();
         Object[] responseObjects = null;
         try {
@@ -85,7 +85,7 @@ public class PCFMessageAgentWrapper extends BaseWrapper {
         StringBuffer responseStrings = new StringBuffer();
         if( responseObjects != null )
             for( Object responseObject : responseObjects ) {
-                responses.add(new PCFMessageWrapper(this.interceptor, responseObject, this.getObject()));
+                responses.add(new PCFMessage(this.interceptor, responseObject, this.getObject()));
                 responseStrings.append(responseObject.toString());
             }
         logger.trace(String.format("PCFMessageAgent.send( %s ) took %d milliseconds to return %d responses: '%s'", request, durationTime, responses.size(), responseStrings));

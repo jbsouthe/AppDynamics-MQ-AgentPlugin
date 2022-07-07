@@ -9,14 +9,14 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
 
-public class JmsConnectionFactoryWrapper extends BaseWrapper {
+public class JmsConnectionFactory extends BaseWrapper {
 
     private IReflector getStringProperty, getIntProperty, getBooleanProperty, getPropertyNames, getObjectProperty;
     private IReflector createContext;
-    private Set<JmsContextWrapper> contextSet = new HashSet<>();
+    private Set<JMSContext> contextSet = new HashSet<>();
     private Set<String> queueSet = new HashSet<>();
 
-    public JmsConnectionFactoryWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap) {
+    public JmsConnectionFactory(ASDKPlugin aGenericInterceptor, Object objectToWrap) {
         super(aGenericInterceptor, objectToWrap, null);
     }
 
@@ -29,8 +29,8 @@ public class JmsConnectionFactoryWrapper extends BaseWrapper {
         createContext = makeInvokeInstanceMethodReflector("createContext");
     }
 
-    public void addContext( JmsContextWrapper jmsContextWrapper ) { contextSet.add(jmsContextWrapper); }
-    public Set<JmsContextWrapper> getContextSet() { return contextSet; }
+    public void addContext( JMSContext JMSContext) { contextSet.add(JMSContext); }
+    public Set<JMSContext> getContextSet() { return contextSet; }
 
     public String getStringProperty( String name ) {
         return (String) getReflectiveObject(this.object, getStringProperty, name);
@@ -51,11 +51,11 @@ public class JmsConnectionFactoryWrapper extends BaseWrapper {
         return getReflectiveObject(this.object, createContext);
     }
 
-    public boolean containsContext(JmsContextWrapper context) {
+    public boolean containsContext(JMSContext context) {
         return contextSet.contains(context);
     }
 
-    public void removeContext(JmsContextWrapper context) {
+    public void removeContext(JMSContext context) {
         contextSet.remove(context);
     }
 

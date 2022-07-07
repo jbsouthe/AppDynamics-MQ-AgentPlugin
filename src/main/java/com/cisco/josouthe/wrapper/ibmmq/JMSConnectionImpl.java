@@ -1,14 +1,14 @@
-package com.cisco.josouthe.wrapper.jms;
+package com.cisco.josouthe.wrapper.ibmmq;
 
 import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.template.AGenericInterceptor;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.cisco.josouthe.wrapper.BaseWrapper;
 
-public class JmsConnectionImplWrapper extends BaseWrapper {
+public class JMSConnectionImpl extends BaseWrapper {
     private IReflector getStringProperty, getIntProperty, getBooleanProperty, getPropertyNames, getObjectProperty;
 
-    public JmsConnectionImplWrapper(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
+    public JMSConnectionImpl(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
         super(aGenericInterceptor, objectToWrap, parentObject);
     }
 
