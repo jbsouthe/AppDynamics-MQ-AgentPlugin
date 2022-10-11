@@ -41,6 +41,19 @@ public class MQQueueManager extends BaseWrapper {
         init(jmsConnectionFactory.getObject().getClass().getClassLoader());
     }
 
+    public MQQueueManager(ASDKPlugin aGenericInterceptor, MQSession mqSession, AuthenticationOverrideInfo authenticationOverrideInfo) {
+        super(aGenericInterceptor, null, null);
+        hostname = mqSession.getHostname();
+        port = mqSession.getPort();
+        queue = mqSession.getQueueManagerName();
+        channel = mqSession.getChannel();
+        if( authenticationOverrideInfo != null && authenticationOverrideInfo.channel != null ) channel=authenticationOverrideInfo.channel;
+        userID = mqSession.getUserID();
+        if( authenticationOverrideInfo != null && authenticationOverrideInfo.userID != null ) userID=authenticationOverrideInfo.userID;
+        password = mqSession.getPassword();
+        if( authenticationOverrideInfo != null && authenticationOverrideInfo.password != null ) password=authenticationOverrideInfo.password;
+        init(mqSession.getObject().getClass().getClassLoader());
+    }
     public MQQueueManager(ASDKPlugin aGenericInterceptor, Object qMgrObject, String qMgrName, Hashtable properties, AuthenticationOverrideInfo authenticationOverrideInfo ) {
         super(aGenericInterceptor, null, null);
         queue= qMgrName;

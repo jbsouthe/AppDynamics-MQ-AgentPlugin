@@ -9,6 +9,7 @@ public class TibcoMonitor extends BaseJMSMonitor {
     public TibcoMonitor(ASDKPlugin aGenericInterceptor, String key, TibjmsConnection connection ) {
         super(aGenericInterceptor, key);
         this.tibjmsConnection = connection;
+        logger.debug(String.format("Created new TibcoMonitor for '%s' with connection: '%s'",key, connection));
     }
 
     @Override

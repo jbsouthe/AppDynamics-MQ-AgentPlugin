@@ -28,6 +28,7 @@ public class MQMonitor extends BaseJMSMonitor {
         } catch (UserNotAuthorizedException e) {
             logger.info(String.format("Error creating PCFMessageAgent, %s", e.toString()));
         }
+        logger.debug(String.format("Created new MQMonitor for '%s' with MQQueueManager: '%s'",key, mqQueueManager));
     }
 
 

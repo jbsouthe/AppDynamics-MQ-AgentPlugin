@@ -4,10 +4,10 @@ import com.appdynamics.instrumentation.sdk.ASDKPlugin;
 import com.appdynamics.instrumentation.sdk.toolbox.reflection.IReflector;
 import com.cisco.josouthe.wrapper.BaseWrapper;
 
-public class TimjmsSession extends BaseWrapper {
+public class TibjmsSession extends BaseWrapper {
     private IReflector _connection;
 
-    public TimjmsSession(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
+    public TibjmsSession(ASDKPlugin aGenericInterceptor, Object objectToWrap, Object parentObject) {
         super(aGenericInterceptor, objectToWrap, parentObject);
     }
     @Override

@@ -10,6 +10,7 @@ import com.cisco.josouthe.monitor.BaseJMSMonitor;
 import com.cisco.josouthe.monitor.MQMonitor;
 import com.cisco.josouthe.monitor.Scheduler;
 import com.cisco.josouthe.monitor.TibcoMonitor;
+import com.cisco.josouthe.wrapper.ibmmq.MQSession;
 import com.cisco.josouthe.wrapper.jms.Destination;
 import com.cisco.josouthe.wrapper.jms.JmsConnectionFactory;
 import com.cisco.josouthe.wrapper.jms.JMSContext;
@@ -130,10 +131,35 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
                 ProcessContext processContext = new ProcessContext(this, params[0], jmsSender.getObject());
                 JMSSenderRequestMessage senderRequestMessage = new JMSSenderRequestMessage(this, params[1], jmsSender.getObject());
                 ActivityContext activityContext = new ActivityContext(this, params[2], jmsSender.getObject());
-                getLogger().debug(
-                        String.format("Process Context: '%s'\n\tJMS Sender Request Message: '%s'\n\tActivity Context: '%s'\n\tSender Configuration: '%s'",
-                            processContext, senderRequestMessage, activityContext, senderConfiguration)
-                );
+                TibjmsSession session = jmsSender.getSession();
+                if( session == null || session.getObject() == null ) {
+                    getLogger().debug(String.format("Session object is null, bailing out of this cycle, jmsSender: %s",jmsSender));
+                    return;
+                }
+                if( session.getObject().getClass().getCanonicalName().equals("com.ibm.mq.jms.MQQueueSession") ) {//this is ibm mq session, not tibco session
+                    MQSession mqSession = new MQSession(this, session.getObject(), null);
+                    String key = String.format("IBM MQ JMS: %s", mqSession.getHostPortString());
+                    if (!monitors.containsKey(key)) {
+                        AuthenticationOverrideInfo authenticationOverrideInfo = authentications.get(key);
+                        if (authenticationOverrideInfo == null && defaultAuthenticationOverrideInfo != null)
+                            authenticationOverrideInfo = defaultAuthenticationOverrideInfo;
+                        monitors.put(key, new MQMonitor(this, key, "IBM MQ JMS", new MQQueueManager(this, mqSession, authenticationOverrideInfo)));
+                    }
+                } else {
+                    TibjmsConnection connection = session.getConnection();
+                    getLogger().debug(String.format("TibjmsConnection: %s", connection));
+                    if (getMonitor(connection) == null) {
+                        AuthenticationOverrideInfo authenticationOverrideInfo = authentications.get(connection.getURLsString()); //TODO need real key, this will never probably return
+                        if (authenticationOverrideInfo == null && defaultAuthenticationOverrideInfo != null)
+                            authenticationOverrideInfo = defaultAuthenticationOverrideInfo;
+                        monitors.put(connection.getURLsString(), new TibcoMonitor(this, connection.getURLsString(), connection));
+                    }
+
+                    getLogger().debug(
+                            String.format("Process Context: '%s'\n\tJMS Sender Request Message: '%s'\n\tActivity Context: '%s'\n\tSender Configuration: '%s'",
+                                    processContext, senderRequestMessage, activityContext, senderConfiguration)
+                    );
+                }
             } else { //must be a JMSProducer
                 if (producerContextMap.containsKey(objectIntercepted)) {
                     JMSContext context = getJmsContext(producerContextMap.get(objectIntercepted));
@@ -349,6 +375,9 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
 
     private BaseJMSMonitor getMonitor( Object contextObject ) {
         String key = "";
+        if( contextObject instanceof String) {
+            key= String.valueOf(contextObject);
+        }
         if( contextObject instanceof JMSContext) {
             JMSContext context = (JMSContext) contextObject;
             key = String.format("%s:%s", context.getJMSProviderName(), context.getConnectionName());
@@ -357,6 +386,11 @@ public class QManagerLifeCycleInterceptor extends AGenericInterceptor {
             TibjmsContext context = (TibjmsContext) contextObject;
             key = context.getConnection().getURLsString();
         }
+        if( contextObject instanceof TibjmsConnection) {
+            TibjmsConnection connection = (TibjmsConnection) contextObject;
+            key = connection.getURLsString();
+        }
+        getLogger().debug(String.format("calling monitors.get('%s') for object: %s has a monitor? %s",key, contextObject, monitors.containsKey(key)));
         return monitors.get(key);
     }
 

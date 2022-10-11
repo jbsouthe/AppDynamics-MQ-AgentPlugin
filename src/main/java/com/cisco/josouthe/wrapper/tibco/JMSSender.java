@@ -22,4 +22,9 @@ public class JMSSender extends BaseWrapper { //com.tibco.plugin.share.jms.impl.J
         Object senderConfiguration = getReflectiveObject(this.object, getConfiguration);
         return new SenderConfiguration(this.interceptor, senderConfiguration, this.object);
     }
+
+    public TibjmsSession getSession() {
+        Object sessionObject = getReflectiveObject(getSession);
+        return new TibjmsSession(this.interceptor, sessionObject, this.getObject());
+    }
 }
