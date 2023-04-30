@@ -1,5 +1,7 @@
 # AppDynamics MQ Agent Plugin
 
+[![published](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)](https://developer.cisco.com/codeexchange/github/repo/jbsouthe/AppDynamics-MQ-AgentPlugin)
+
 This plugin is intended to replace the Machine Agent Based Extension for MQ, and collect the data needed by interception rather than query
 ![QMgr Metrics Screenshot](readme/img1.png)
 
