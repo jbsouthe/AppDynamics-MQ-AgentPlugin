@@ -5,7 +5,7 @@ This plugin is intended to replace the Machine Agent Based Extension for MQ, and
 
 ![Queue Metrics Screenshot](readme/img2.png)
 
-###Metrics Collected
+### Metrics Collected
 Each node will collect the following metrics, that will then combine up to the Tier level of the Application they are running as a part of. Custom dashboards and alerts can be configured for them just as other metrics. 
 
 Root Metric Path: "Application Infrastructure Performance|<Tier>|Custom Metrics|IBM MQ JMS"
@@ -60,7 +60,7 @@ Here is an example of such a file:
         { "hostname": "someOtherHost", "port": 1414, "userID": "someOtherUser", "password": "someOtherPassword", "channel": "MONITOR.SRVCONN" }
     ]
 
-###Sleep interval between collection runs
+### Sleep interval between collection runs
 
 To modify the sleep between monitoring runs to pull data from the Queue Managers from 30,000ms (30 seconds) to something higher, the minimum is enforced to 30 seconds. set the following JVM property:
 
